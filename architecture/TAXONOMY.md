@@ -267,8 +267,8 @@ Skills live in `.claude/skills/` (project-level) or `.agents/skills/` (installed
 
 | Phase | Title | Status | Depends On |
 |---|---|---|---|
-| PHASE-01 | Tech Stack Selection & ADRs | pending | — |
-| PHASE-02 | AI Agent & Subagent Configuration | in-progress | — |
+| PHASE-01 | Tech Stack Selection & ADRs | complete | — |
+| PHASE-02 | AI Agent & Subagent Configuration | complete | — |
 | PHASE-03 | Monorepo Init & Project Scaffolding | in-progress | PHASE-01 |
 | PHASE-04 | Design System & Theme | pending | PHASE-03 |
 | PHASE-05 | Custom UI Components | pending | PHASE-04 |
@@ -293,7 +293,19 @@ Skills live in `.claude/skills/` (project-level) or `.agents/skills/` (installed
 
 | # | Title | Status |
 |---|---|---|
-| *(none yet — populated from PHASE-01)* | — | — |
+| ADR-001 | Frontend Framework — Vite + React 19 + TypeScript | Accepted |
+| ADR-002 | Client-Side Routing — TanStack Router | Accepted |
+| ADR-003 | Server State Management — TanStack Query | Accepted |
+| ADR-004 | UI Component Library — shadcn/ui (Maia Variant) + Tailwind CSS v4 | Accepted |
+| ADR-005 | Client State Management — Zustand | Accepted |
+| ADR-006 | Backend Framework — Hono + Cloudflare Workers | Accepted |
+| ADR-007 | Authentication — Better-auth | Accepted |
+| ADR-008 | Database & ORM — Drizzle ORM + Cloudflare D1 | Accepted |
+| ADR-009 | Caching Strategy — Cloudflare KV (Primary) | Accepted |
+| ADR-010 | Toolchain — npm Workspaces + Biome | Accepted |
+| ADR-011 | Testing Strategy — Playwright E2E Only (Phase 1 Scope) | Accepted |
+| ADR-012 | Deployment Platform — Cloudflare Pages + Workers + D1 | Accepted |
+| ADR-013 | Monorepo Structure — npm Workspaces, apps/ + packages/ Layout | Accepted |
 
 ---
 
@@ -317,7 +329,10 @@ Skills live in `.claude/skills/` (project-level) or `.agents/skills/` (installed
 
 | Title | Applies To | Status |
 |---|---|---|
-| *(populated from PHASE-01 and PHASE-03)* | — | — |
+| STANDARD-typescript-strict | All | Active |
+| STANDARD-api-response-shape | Backend | Active |
+| STANDARD-component-naming | Frontend | Active |
+| STANDARD-zod-validation | Backend | Active |
 
 ---
 
