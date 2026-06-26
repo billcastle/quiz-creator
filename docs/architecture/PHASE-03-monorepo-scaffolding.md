@@ -1,7 +1,7 @@
 ---
 phase: 03
 title: "Monorepo Init & Project Scaffolding"
-status: pending
+status: in-progress
 depends_on: ["PHASE-01", "PHASE-02"]
 estimated_tickets: 6
 ---

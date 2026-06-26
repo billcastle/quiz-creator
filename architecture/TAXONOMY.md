@@ -268,8 +268,8 @@ Skills live in `.claude/skills/` (project-level) or `.agents/skills/` (installed
 | Phase | Title | Status | Depends On |
 |---|---|---|---|
 | PHASE-01 | Tech Stack Selection & ADRs | pending | — |
-| PHASE-02 | AI Agent & Subagent Configuration | pending | — |
-| PHASE-03 | Monorepo Init & Project Scaffolding | pending | PHASE-01 |
+| PHASE-02 | AI Agent & Subagent Configuration | in-progress | — |
+| PHASE-03 | Monorepo Init & Project Scaffolding | in-progress | PHASE-01 |
 | PHASE-04 | Design System & Theme | pending | PHASE-03 |
 | PHASE-05 | Custom UI Components | pending | PHASE-04 |
 | PHASE-06 | Data Modeling & Domain Design | pending | PHASE-01 |

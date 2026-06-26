@@ -1,7 +1,7 @@
 ---
 phase: 02
 title: "AI Agent & Subagent Configuration"
-status: pending
+status: in-progress
 depends_on: ["PHASE-01"]
 estimated_tickets: 3
 ---
