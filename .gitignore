@@ -1,0 +1,9 @@
+prompts/
+archive/
+node_modules/
+dist/
+.env.local
+.env.*.local
+*.tsbuildinfo
+.wrangler/
+.DS_Store

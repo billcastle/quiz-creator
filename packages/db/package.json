@@ -1,0 +1,17 @@
+{
+  "name": "@quiz/db",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "latest",
+    "drizzle-kit": "latest"
+  }
+}

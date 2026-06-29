@@ -1,0 +1,25 @@
+{
+  "name": "quiz-creatorv3",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:api & npm run dev:web",
+    "dev:web": "npm run dev -w @quiz/web",
+    "dev:api": "npm run dev -w @quiz/api",
+    "build": "npm run build -w @quiz/web && npm run build -w @quiz/api",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "typecheck": "tsc --noEmit -p apps/web/tsconfig.json && tsc --noEmit -p apps/api/tsconfig.json && tsc --noEmit -p packages/db/tsconfig.json && tsc --noEmit -p packages/shared/tsconfig.json && tsc --noEmit -p packages/ui/tsconfig.json",
+    "test:e2e": "playwright test",
+    "db:migrate:local": "wrangler d1 migrations apply quiz-db --local --config apps/api/wrangler.toml",
+    "db:studio": "drizzle-kit studio"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "@playwright/test": "latest",
+    "typescript": "latest"
+  }
+}
