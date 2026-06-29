@@ -1,0 +1,16 @@
+{
+  "name": "@quiz/ui",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "tailwindcss": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0"
+  }
+}
