@@ -1,3 +1,41 @@
-// @quiz/ui — design system exports
-// shadcn/ui components (Maia style) will be added in Phase 01+
-export {}
+// shadcn/ui components
+
+export * from './components/atoms/ProgressRing'
+// atoms
+export * from './components/atoms/RadioOption'
+export * from './components/atoms/Spinner'
+export * from './components/atoms/Timer'
+export * from './components/molecules/AnswerOption'
+export * from './components/molecules/AnswerReviewRow'
+export * from './components/molecules/CategoryTabs'
+export * from './components/molecules/FeaturedCard'
+export * from './components/molecules/NavItem'
+export * from './components/molecules/QuestionItem'
+export * from './components/molecules/QuestionJumpGrid'
+export * from './components/molecules/QuestionnaireCard'
+export * from './components/molecules/ScoreCircle'
+// molecules
+export * from './components/molecules/SearchBar'
+export * from './components/molecules/SectionBreakdown'
+export * from './components/molecules/SectionHeader'
+export * from './components/organisms/SideNav'
+export * from './components/organisms/ThemeToggle'
+// organisms
+export * from './components/organisms/TopNav'
+export * from './components/ui/avatar'
+export * from './components/ui/badge'
+export * from './components/ui/button'
+export * from './components/ui/checkbox'
+export * from './components/ui/dropdown-menu'
+export * from './components/ui/input'
+export * from './components/ui/progress'
+export * from './components/ui/radio-group'
+export * from './components/ui/select'
+export * from './components/ui/separator'
+export * from './components/ui/tabs'
+export * from './components/ui/textarea'
+// stores
+export { initTheme, useThemeStore } from './stores/theme'
+// themes
+export { applyTheme, themes } from './themes'
+export type { Theme } from './themes/types'

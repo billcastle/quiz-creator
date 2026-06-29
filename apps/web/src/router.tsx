@@ -1,4 +1,5 @@
 import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router'
+import DesignSystemPage from './pages/DesignSystemPage'
 
 const rootRoute = createRootRoute({
   component: () => <Outlet />,
@@ -10,7 +11,13 @@ const indexRoute = createRoute({
   component: () => <h1>Questify</h1>,
 })
 
-const routeTree = rootRoute.addChildren([indexRoute])
+const designSystemRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/design-system',
+  component: DesignSystemPage,
+})
+
+const routeTree = rootRoute.addChildren([indexRoute, designSystemRoute])
 
 export const router = createRouter({ routeTree })
 
