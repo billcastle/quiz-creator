@@ -133,6 +133,7 @@ Is this a step-by-step procedure for a complex task?
 |---|---|---|
 | PATTERN-file-based-theme | Design System / Theming | Established |
 | PATTERN-navigation-callback-props | UI / Routing | Established |
+| PATTERN-per-request-env-factory | Cloudflare Workers / API | Established |
 
 ### STANDARDs
 
@@ -146,6 +147,8 @@ Is this a step-by-step procedure for a complex task?
 | Title | Audience | Status |
 |---|---|---|
 | GUIDE-adding-theme | Developers and designers | Current |
+| GUIDE-adding-db-migration | Developers | Current |
+| GUIDE-better-auth-local-dev | Developers | Current |
 
 ---
 

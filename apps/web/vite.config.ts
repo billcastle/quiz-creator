@@ -7,4 +7,14 @@ export default defineConfig({
   resolve: {
     alias: { '@': '/src' },
   },
+  server: {
+    port: 5176,
+    strictPort: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8787',
+        changeOrigin: false,
+      },
+    },
+  },
 })

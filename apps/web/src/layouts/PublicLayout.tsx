@@ -1,15 +1,23 @@
 import { SideNav, TopNav } from '@quiz/ui'
 import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { authClient } from '../lib/auth-client'
 
-export function AuthenticatedLayout() {
+export function PublicLayout() {
   const navigate = useNavigate()
   const { location } = useRouterState()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [sideNavOpen, setSideNavOpen] = useState(false)
+
+  useEffect(() => {
+    authClient.getSession().then(({ data }) => {
+      setIsAuthenticated(!!data)
+    })
+  }, [])
 
   async function handleSignOut() {
     await authClient.signOut()
+    setIsAuthenticated(false)
     navigate({ to: '/sign-in' })
   }
 
@@ -21,8 +29,10 @@ export function AuthenticatedLayout() {
   return (
     <div className="flex h-screen flex-col bg-[var(--color-bg-base)]">
       <TopNav
-        isAuthenticated
+        isAuthenticated={isAuthenticated}
         onLogoClick={() => navigate({ to: '/' })}
+        onSignIn={() => navigate({ to: '/sign-in' })}
+        onSignUp={() => navigate({ to: '/sign-up' })}
         onProfile={() => navigate({ to: '/' })}
         onSignOut={handleSignOut}
         onHamburgerClick={() => setSideNavOpen(true)}

@@ -6,9 +6,10 @@ import {
   redirect,
 } from '@tanstack/react-router'
 import { AuthenticatedLayout } from './layouts/AuthenticatedLayout'
+import { PublicLayout } from './layouts/PublicLayout'
 import { TakeLayout } from './layouts/TakeLayout'
 import { UnauthenticatedLayout } from './layouts/UnauthenticatedLayout'
-import { isAuthenticatedStub } from './lib/auth-stub'
+import { authClient } from './lib/auth-client'
 import DesignSystemPage from './pages/DesignSystemPage'
 import HomePage from './pages/HomePage'
 import QuizBuilderPage from './pages/QuizBuilderPage'
@@ -29,10 +30,9 @@ const authenticatedRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: '_authenticated',
   component: AuthenticatedLayout,
-  beforeLoad: () => {
-    if (!isAuthenticatedStub()) {
-      throw redirect({ to: '/sign-in' })
-    }
+  beforeLoad: async () => {
+    const { data: session } = await authClient.getSession()
+    if (!session) throw redirect({ to: '/sign-in' })
   },
 })
 
@@ -43,6 +43,13 @@ const unauthenticatedRoute = createRoute({
   component: UnauthenticatedLayout,
 })
 
+// Pathless layout route — public pages with TopNav but no auth guard or SideNav
+const publicRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: '_public',
+  component: PublicLayout,
+})
+
 // Pathless layout route — wraps taker-facing pages (no creator nav)
 const takeRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -50,13 +57,15 @@ const takeRoute = createRoute({
   component: TakeLayout,
 })
 
-// --- Authenticated routes ---
+// --- Public routes ---
 
 const indexRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
+  getParentRoute: () => publicRoute,
   path: '/',
   component: HomePage,
 })
+
+// --- Authenticated routes ---
 
 const quizNewRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
@@ -131,8 +140,8 @@ const designSystemRoute = createRoute({
 })
 
 const routeTree = rootRoute.addChildren([
+  publicRoute.addChildren([indexRoute]),
   authenticatedRoute.addChildren([
-    indexRoute,
     quizNewRoute,
     quizEditRoute,
     quizResultsRoute,
