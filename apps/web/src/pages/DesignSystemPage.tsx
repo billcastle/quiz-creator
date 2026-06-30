@@ -18,6 +18,7 @@ import {
   QuestionnaireCard,
   RadioGroup,
   RadioOption,
+  RichTextEditor,
   ScoreCircle,
   SectionBreakdown,
   SectionHeader,
@@ -97,7 +98,7 @@ export default function DesignSystemPage() {
         <ThemeToggle />
       </div>
 
-      <div className="mx-auto max-w-4xl space-y-12 px-6 py-10">
+      <div className="mx-auto max-w-4xl space-y-16 px-8 py-12">
         {/* 1. Tokens */}
         <Section title="1. Design Tokens">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
@@ -192,10 +193,16 @@ export default function DesignSystemPage() {
             </div>
             <Row>
               <div className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
-                <Checkbox defaultChecked /> Checked
+                <Checkbox id="check-checked" defaultChecked />
+                <label htmlFor="check-checked" className="cursor-pointer">
+                  Checked
+                </label>
               </div>
               <div className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
-                <Checkbox /> Unchecked
+                <Checkbox id="check-unchecked" />
+                <label htmlFor="check-unchecked" className="cursor-pointer">
+                  Unchecked
+                </label>
               </div>
             </Row>
             <div className="space-y-1">
@@ -380,8 +387,29 @@ export default function DesignSystemPage() {
           </div>
         </Section>
 
-        {/* 13. Results */}
-        <Section title="13. Results">
+        {/* 13. Rich Text Editor */}
+        <Section title="13. Rich Text Editor">
+          <div className="max-w-xl space-y-4">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-[var(--color-text-secondary)]">
+                Question title
+              </p>
+              <RichTextEditor placeholder="Enter question title…" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-[var(--color-text-secondary)]">
+                Question description
+              </p>
+              <RichTextEditor
+                content="<p>Provide any <strong>additional context</strong> here. You can use <em>formatting</em> and lists:</p><ul><li>Bullet one</li><li>Bullet two</li></ul>"
+                placeholder="Add a description or hint…"
+              />
+            </div>
+          </div>
+        </Section>
+
+        {/* 14. Results */}
+        <Section title="14. Results">
           <div className="space-y-6">
             <div>
               <p className="mb-3 text-sm text-[var(--color-text-secondary)]">ScoreCircle</p>
@@ -429,8 +457,8 @@ export default function DesignSystemPage() {
           </div>
         </Section>
 
-        {/* 14. ThemeToggle */}
-        <Section title="14. ThemeToggle">
+        {/* 15. ThemeToggle */}
+        <Section title="15. ThemeToggle">
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <span className="text-sm text-[var(--color-text-secondary)]">
@@ -446,6 +474,7 @@ export default function DesignSystemPage() {
               searchValue={searchValue}
               onSearchChange={setSearchValue}
               onSearchClear={() => setSearchValue('')}
+              isAuthenticated
               avatarFallback="BL"
             />
           </div>
@@ -453,11 +482,7 @@ export default function DesignSystemPage() {
 
         <Section title="Organisms — SideNav">
           <div className="h-96 overflow-hidden rounded-lg border border-[var(--color-border)]">
-            <SideNav
-              activePath="/"
-              activeCategory={activeCategory}
-              onCategoryChange={setActiveCategory}
-            />
+            <SideNav activePath="/" />
           </div>
         </Section>
       </div>

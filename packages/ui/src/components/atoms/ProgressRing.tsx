@@ -49,7 +49,7 @@ export function ProgressRing({ value, size = 'md' }: ProgressRingProps) {
         textAnchor="middle"
         className="rotate-[90deg]"
         style={{
-          transform: `rotate(90deg) translate(0, 0)`,
+          transform: `translate(0, 0)`,
           transformOrigin: `${px / 2}px ${px / 2}px`,
           fontSize: size === 'lg' ? '18px' : '12px',
           fontWeight: 600,

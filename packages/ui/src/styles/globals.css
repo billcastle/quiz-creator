@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@source "../";
+@source "../../../apps/web/src";
 
 :root {
   --color-bg-base: #f9fafb;
@@ -18,4 +20,70 @@
   --color-quiz: #8b5cf6;
   --color-survey: #0ea5e9;
   --color-exam: #f97316;
+}
+
+@layer base {
+  html {
+    font-size: 1.0625rem;
+    font-family: 'Elms Sans Variable', sans-serif;
+  }
+
+  body {
+    font-family: 'Elms Sans Variable', sans-serif;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  /* ProseMirror (TipTap) editor content */
+  .rich-text-prose {
+    color: var(--color-text-primary);
+    line-height: 1.6;
+  }
+
+  .rich-text-prose p {
+    margin: 0 0 0.5em;
+  }
+
+  .rich-text-prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  .rich-text-prose p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--color-text-disabled);
+    pointer-events: none;
+    float: left;
+    height: 0;
+  }
+
+  .rich-text-prose strong {
+    font-weight: 700;
+  }
+
+  .rich-text-prose em {
+    font-style: italic;
+  }
+
+  .rich-text-prose ul,
+  .rich-text-prose ol {
+    padding-left: 1.5em;
+    margin: 0 0 0.5em;
+  }
+
+  .rich-text-prose ul {
+    list-style-type: disc;
+  }
+
+  .rich-text-prose ol {
+    list-style-type: decimal;
+  }
+
+  .rich-text-prose li + li {
+    margin-top: 0.25em;
+  }
 }

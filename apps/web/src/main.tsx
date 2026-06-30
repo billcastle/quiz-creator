@@ -1,3 +1,5 @@
+import '@fontsource-variable/elms-sans/wght.css'
+import '@fontsource-variable/elms-sans/wght-italic.css'
 import '@quiz/ui/styles'
 import { RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'

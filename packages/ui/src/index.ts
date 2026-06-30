@@ -13,6 +13,7 @@ export * from './components/molecules/NavItem'
 export * from './components/molecules/QuestionItem'
 export * from './components/molecules/QuestionJumpGrid'
 export * from './components/molecules/QuestionnaireCard'
+export * from './components/molecules/RichTextEditor'
 export * from './components/molecules/ScoreCircle'
 // molecules
 export * from './components/molecules/SearchBar'

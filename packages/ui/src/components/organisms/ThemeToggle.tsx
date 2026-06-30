@@ -35,7 +35,7 @@ export function ThemeToggle() {
         <Button variant="outline" size="sm" className="gap-2">
           <Palette className="h-4 w-4" />
           <span>{activeTheme?.name ?? 'Theme'}</span>
-          {activeTheme?.swatches.slice(0, 3).map((color) => (
+          {activeTheme?.swatches.slice(0, 2).map((color) => (
             <Swatch key={color} color={color} />
           ))}
         </Button>
@@ -49,7 +49,7 @@ export function ThemeToggle() {
           >
             <span className="flex-1 text-sm">{theme.name}</span>
             <span className="flex gap-1">
-              {theme.swatches.map((color) => (
+              {theme.swatches.slice(0, 2).map((color) => (
                 <Swatch key={color} color={color} />
               ))}
             </span>
