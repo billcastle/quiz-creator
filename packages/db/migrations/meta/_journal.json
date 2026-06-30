@@ -22,6 +22,13 @@
       "when": 1782813427800,
       "tag": "0002_ambiguous_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1782821340139,
+      "tag": "0003_nice_talisman",
+      "breakpoints": true
     }
   ]
 }

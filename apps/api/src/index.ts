@@ -48,7 +48,19 @@ app.post('/api/questionnaires', async (c) => {
   const session = await auth.api.getSession({ headers: c.req.raw.headers })
   if (!session) return c.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, 401)
 
-  const body: { title?: string } = await c.req.json<{ title?: string }>().catch(() => ({}))
+  const body: {
+    title?: string
+    visibility?: 'public' | 'private'
+    category?: string
+    status?: 'draft' | 'published'
+  } = await c.req
+    .json<{
+      title?: string
+      visibility?: 'public' | 'private'
+      category?: string
+      status?: 'draft' | 'published'
+    }>()
+    .catch(() => ({}))
   const db = createDb(c.env.QUIZ_DB)
   const now = new Date()
   const id = crypto.randomUUID()
@@ -57,9 +69,10 @@ app.post('/api/questionnaires', async (c) => {
     id,
     creatorId: session.user.id,
     title: body.title ?? 'Untitled Questionnaire',
-    status: 'draft',
-    visibility: 'private',
+    status: body.status ?? 'draft',
+    visibility: body.visibility ?? 'public',
     allowMultipleAttempts: false,
+    category: body.category ?? null,
     createdAt: now,
     updatedAt: now,
   })
@@ -129,6 +142,7 @@ app.put('/api/questionnaires/:id', async (c) => {
     visibility?: 'public' | 'private'
     timeLimitSeconds?: number | null
     allowMultipleAttempts?: boolean
+    category?: string | null
   }>()
 
   await db
@@ -141,6 +155,7 @@ app.put('/api/questionnaires/:id', async (c) => {
       ...(body.allowMultipleAttempts !== undefined && {
         allowMultipleAttempts: body.allowMultipleAttempts,
       }),
+      ...(body.category !== undefined && { category: body.category }),
       updatedAt: new Date(),
     })
     .where(eq(schema.questionnaires.id, q.id))
@@ -195,6 +210,10 @@ app.post('/api/questionnaires/:id/questions', async (c) => {
     prompt?: string
     sectionId?: string
     position?: number
+    required?: boolean
+    showCorrectAnswer?: boolean
+    caseSensitive?: boolean
+    acceptableAnswers?: string[] | null
   }>()
 
   const existing = await db
@@ -214,10 +233,11 @@ app.post('/api/questionnaires/:id/questions', async (c) => {
     type: body.type,
     prompt: body.prompt ?? '',
     position,
-    required: true,
-    showCorrectAnswer: false,
-    caseSensitive: false,
-    acceptableAnswers: null,
+    required: body.required ?? true,
+    showCorrectAnswer: body.showCorrectAnswer ?? false,
+    caseSensitive: body.caseSensitive ?? false,
+    acceptableAnswers:
+      body.acceptableAnswers != null ? JSON.stringify(body.acceptableAnswers) : null,
     createdAt: now,
     updatedAt: now,
   })

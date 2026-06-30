@@ -9,8 +9,9 @@ export type Questionnaire = {
   visibility: ContentVisibility
   timeLimitSeconds: number | null
   allowMultipleAttempts: boolean
-  createdAt: number
-  updatedAt: number
+  category: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 export type Survey = {
@@ -18,8 +19,8 @@ export type Survey = {
   title: string
   status: ContentStatus
   visibility: ContentVisibility
-  createdAt: number
-  updatedAt: number
+  createdAt: string
+  updatedAt: string
 }
 
 export type ContentItem =
@@ -46,8 +47,8 @@ export type Question = {
   showCorrectAnswer: boolean
   caseSensitive: boolean
   acceptableAnswers: string | null
-  createdAt: number
-  updatedAt: number
+  createdAt: string
+  updatedAt: string
   options: QuestionOption[]
 }
 

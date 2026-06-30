@@ -66,6 +66,7 @@ export const questionnaires = sqliteTable('questionnaires', {
   allowMultipleAttempts: integer('allow_multiple_attempts', { mode: 'boolean' })
     .notNull()
     .default(false),
+  category: text('category'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 })
@@ -123,6 +124,7 @@ export const surveys = sqliteTable('surveys', {
   allowMultipleAttempts: integer('allow_multiple_attempts', { mode: 'boolean' })
     .notNull()
     .default(false),
+  category: text('category'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 })

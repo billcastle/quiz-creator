@@ -8,6 +8,7 @@
     "./styles": "./src/styles/globals.css"
   },
   "dependencies": {
+    "@radix-ui/react-alert-dialog": "^1.1.17",
     "@radix-ui/react-avatar": "latest",
     "@radix-ui/react-checkbox": "latest",
     "@radix-ui/react-dropdown-menu": "latest",

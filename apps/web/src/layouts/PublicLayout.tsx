@@ -8,12 +8,20 @@ export function PublicLayout() {
   const { location } = useRouterState()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [sideNavOpen, setSideNavOpen] = useState(false)
+  const [sideCollapsed, setSideCollapsed] = useState(
+    () => localStorage.getItem('sidebar-collapsed') === 'true'
+  )
 
   useEffect(() => {
     authClient.getSession().then(({ data }) => {
       setIsAuthenticated(!!data)
     })
   }, [])
+
+  function handleCollapse(v: boolean) {
+    setSideCollapsed(v)
+    localStorage.setItem('sidebar-collapsed', String(v))
+  }
 
   async function handleSignOut() {
     await authClient.signOut()
@@ -45,6 +53,8 @@ export function PublicLayout() {
             onNavigate={handleNavigate}
             onCreateQuiz={() => navigate({ to: '/quiz/new' })}
             onCreateSurvey={() => navigate({ to: '/survey/new' })}
+            collapsed={sideCollapsed}
+            onCollapsedChange={handleCollapse}
           />
         </div>
 

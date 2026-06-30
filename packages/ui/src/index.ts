@@ -23,6 +23,7 @@ export * from './components/organisms/SideNav'
 export * from './components/organisms/ThemeToggle'
 // organisms
 export * from './components/organisms/TopNav'
+export * from './components/ui/alert-dialog'
 export * from './components/ui/avatar'
 export * from './components/ui/badge'
 export * from './components/ui/button'

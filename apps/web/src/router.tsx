@@ -6,6 +6,7 @@ import {
   redirect,
 } from '@tanstack/react-router'
 import { AuthenticatedLayout } from './layouts/AuthenticatedLayout'
+import { BuilderLayout } from './layouts/BuilderLayout'
 import { PublicLayout } from './layouts/PublicLayout'
 import { TakeLayout } from './layouts/TakeLayout'
 import { UnauthenticatedLayout } from './layouts/UnauthenticatedLayout'
@@ -25,11 +26,22 @@ const rootRoute = createRootRoute({
   component: () => <Outlet />,
 })
 
-// Pathless layout route — wraps all authenticated pages
+// Pathless layout route — wraps all authenticated pages (with sidebar/topnav)
 const authenticatedRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: '_authenticated',
   component: AuthenticatedLayout,
+  beforeLoad: async () => {
+    const { data: session } = await authClient.getSession()
+    if (!session) throw redirect({ to: '/sign-in' })
+  },
+})
+
+// Pathless layout route — wraps builder pages (no sidebar, no topnav)
+const builderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: '_builder',
+  component: BuilderLayout,
   beforeLoad: async () => {
     const { data: session } = await authClient.getSession()
     if (!session) throw redirect({ to: '/sign-in' })
@@ -65,19 +77,21 @@ const indexRoute = createRoute({
   component: HomePage,
 })
 
-// --- Authenticated routes ---
+// --- Builder routes (auth required, no chrome) ---
 
 const quizNewRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
+  getParentRoute: () => builderRoute,
   path: '/quiz/new',
   component: QuizBuilderPage,
 })
 
 const quizEditRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
+  getParentRoute: () => builderRoute,
   path: '/quiz/$id/edit',
   component: QuizBuilderPage,
 })
+
+// --- Authenticated routes (with sidebar/topnav) ---
 
 const quizResultsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
@@ -86,13 +100,13 @@ const quizResultsRoute = createRoute({
 })
 
 const surveyNewRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
+  getParentRoute: () => builderRoute,
   path: '/survey/new',
   component: SurveyBuilderPage,
 })
 
 const surveyEditRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
+  getParentRoute: () => builderRoute,
   path: '/survey/$id/edit',
   component: SurveyBuilderPage,
 })
@@ -141,14 +155,8 @@ const designSystemRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([indexRoute]),
-  authenticatedRoute.addChildren([
-    quizNewRoute,
-    quizEditRoute,
-    quizResultsRoute,
-    surveyNewRoute,
-    surveyEditRoute,
-    surveyResultsRoute,
-  ]),
+  authenticatedRoute.addChildren([quizResultsRoute, surveyResultsRoute]),
+  builderRoute.addChildren([quizNewRoute, quizEditRoute, surveyNewRoute, surveyEditRoute]),
   unauthenticatedRoute.addChildren([signInRoute, signUpRoute]),
   takeRoute.addChildren([quizTakeRoute, surveyTakeRoute]),
   designSystemRoute,

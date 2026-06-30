@@ -1,20 +1,61 @@
-import { Badge, Button, Checkbox, Input, Textarea } from '@quiz/ui'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Badge,
+  Button,
+  Checkbox,
+  CONTENT_CATEGORIES,
+  Input,
+  RichTextEditor,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@quiz/ui'
+import { useBlocker, useNavigate, useParams } from '@tanstack/react-router'
 import { ChevronLeft, GripVertical, Plus, Trash2 } from 'lucide-react'
+import { nanoid } from 'nanoid'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../lib/api'
 import type { Question, QuestionnaireDetail, QuestionOption, QuestionType } from '../types/content'
 
 const TYPE_LABELS: Record<QuestionType, string> = {
-  single_choice: 'Single choice',
-  multiple_choice: 'Multiple choice',
-  short_answer: 'Short answer',
-  long_answer: 'Long answer',
+  single_choice: 'Single',
+  multiple_choice: 'Multiple',
+  short_answer: 'Short',
+  long_answer: 'Long',
 }
 
 const STATUS_LABELS = { draft: 'Draft', published: 'Published', archived: 'Archived' }
 
-// ── Question editor ───────────────────────────────────────────────────────────
+function makeLocalQuestion(position: number): Question {
+  const now = new Date().toISOString()
+  return {
+    id: nanoid(),
+    parentType: 'questionnaire',
+    parentId: '',
+    sectionId: null,
+    type: 'single_choice',
+    prompt: '',
+    position,
+    required: true,
+    showCorrectAnswer: false,
+    caseSensitive: false,
+    acceptableAnswers: null,
+    createdAt: now,
+    updatedAt: now,
+    options: [],
+  }
+}
+
+// ── Options editor ────────────────────────────────────────────────────────────
 
 function OptionsEditor({
   question,
@@ -56,7 +97,6 @@ function OptionsEditor({
           <Input
             value={opt.label}
             onChange={(e) => onOptionChange(opt.id, { label: e.target.value })}
-            onBlur={(e) => onOptionChange(opt.id, { label: e.target.value })}
             placeholder="Option text"
             className="flex-1"
           />
@@ -90,7 +130,6 @@ function AcceptableAnswersEditor({
   onChange: (answers: string[]) => void
 }) {
   const current: string[] = question.acceptableAnswers ? JSON.parse(question.acceptableAnswers) : []
-
   const [input, setInput] = useState('')
 
   function add() {
@@ -141,12 +180,13 @@ function AcceptableAnswersEditor({
   )
 }
 
+// ── Question editor (center panel) ───────────────────────────────────────────
+
 function QuestionEditor({
   question,
-  onPromptBlur,
+  onPromptChange,
   onTypeChange,
   onRequiredChange,
-  onShowCorrectAnswerChange,
   onCaseSensitiveChange,
   onAcceptableAnswersChange,
   onOptionAdd,
@@ -154,36 +194,29 @@ function QuestionEditor({
   onOptionDelete,
 }: {
   question: Question
-  onPromptBlur: (prompt: string) => void
+  onPromptChange: (prompt: string) => void
   onTypeChange: (type: QuestionType) => void
   onRequiredChange: (required: boolean) => void
-  onShowCorrectAnswerChange: (v: boolean) => void
   onCaseSensitiveChange: (v: boolean) => void
   onAcceptableAnswersChange: (answers: string[]) => void
   onOptionAdd: () => void
   onOptionChange: (id: string, patch: Partial<QuestionOption>) => void
   onOptionDelete: (id: string) => void
 }) {
-  const [prompt, setPrompt] = useState(question.prompt)
-
-  useEffect(() => {
-    setPrompt(question.prompt)
-  }, [question.prompt])
-
   return (
     <div className="space-y-6">
-      {/* Type selector */}
+      {/* Question type — single row */}
       <div>
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
           Question type
         </p>
-        <div className="grid grid-cols-2 gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-1">
+        <div className="flex gap-1 overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-1">
           {(Object.keys(TYPE_LABELS) as QuestionType[]).map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => onTypeChange(t)}
-              className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+              className={`shrink-0 rounded-md px-3 py-1.5 text-sm transition-colors ${
                 question.type === t
                   ? 'bg-[var(--color-bg-surface)] font-medium text-[var(--color-text-primary)] shadow-sm'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
@@ -195,18 +228,15 @@ function QuestionEditor({
         </div>
       </div>
 
-      {/* Prompt */}
+      {/* Prompt — rich text */}
       <div>
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
           Question prompt
         </p>
-        <Textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          onBlur={() => onPromptBlur(prompt)}
-          placeholder="Enter your question"
-          rows={3}
-          className="w-full resize-none"
+        <RichTextEditor
+          content={question.prompt}
+          onChange={onPromptChange}
+          placeholder="Enter your question…"
         />
       </div>
 
@@ -237,19 +267,6 @@ function QuestionEditor({
             onOptionChange={onOptionChange}
             onOptionDelete={onOptionDelete}
           />
-          <div className="mt-3 flex items-center gap-2">
-            <Checkbox
-              id={`show-correct-${question.id}`}
-              checked={question.showCorrectAnswer}
-              onCheckedChange={(v) => onShowCorrectAnswerChange(!!v)}
-            />
-            <label
-              htmlFor={`show-correct-${question.id}`}
-              className="cursor-pointer text-sm text-[var(--color-text-primary)]"
-            >
-              Show correct answer after submission
-            </label>
-          </div>
         </div>
       )}
 
@@ -284,37 +301,58 @@ function QuestionEditor({
   )
 }
 
-// ── Question card (left panel) ─────────────────────────────────────────────────
+// ── Question card (left panel) ────────────────────────────────────────────────
 
 function QuestionCard({
   question,
   isActive,
   index,
+  isDragOver,
   onSelect,
   onDelete,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
 }: {
   question: Question
   isActive: boolean
   index: number
+  isDragOver: boolean
   onSelect: () => void
   onDelete: () => void
+  onDragStart: (index: number) => void
+  onDragOver: (index: number) => void
+  onDrop: (index: number) => void
+  onDragEnd: () => void
 }) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`flex w-full cursor-pointer items-start gap-2 rounded-lg border p-3 text-left transition-colors ${
+    // biome-ignore lint/a11y/noStaticElementInteractions: draggable list item using HTML5 drag API
+    <div
+      draggable
+      onDragStart={() => onDragStart(index)}
+      onDragOver={(e) => {
+        e.preventDefault()
+        onDragOver(index)
+      }}
+      onDrop={(e) => {
+        e.preventDefault()
+        onDrop(index)
+      }}
+      onDragEnd={onDragEnd}
+      className={`flex items-start gap-2 rounded-lg border p-3 transition-colors ${
         isActive
           ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5'
           : 'border-[var(--color-border)] bg-[var(--color-bg-surface)] hover:bg-[var(--color-bg-subtle)]'
-      }`}
+      } ${isDragOver ? 'border-t-2 border-t-[var(--color-accent)] opacity-80' : ''}`}
     >
-      <GripVertical
-        size={16}
-        className="mt-0.5 shrink-0 text-[var(--color-text-disabled)]"
+      <span
+        className="mt-0.5 shrink-0 cursor-grab text-[var(--color-text-disabled)]"
         aria-hidden="true"
-      />
-      <div className="min-w-0 flex-1">
+      >
+        <GripVertical size={16} />
+      </span>
+      <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left">
         <div className="mb-1 flex items-center gap-1.5">
           <span className="text-xs text-[var(--color-text-disabled)]">{index + 1}</span>
           <Badge variant="secondary" className="text-xs">
@@ -322,9 +360,11 @@ function QuestionCard({
           </Badge>
         </div>
         <p className="truncate text-sm text-[var(--color-text-primary)]">
-          {question.prompt || 'Untitled question'}
+          {question.prompt
+            ? question.prompt.replace(/<[^>]+>/g, '') || 'Untitled question'
+            : 'Untitled question'}
         </p>
-      </div>
+      </button>
       <button
         type="button"
         onClick={(e) => {
@@ -336,7 +376,123 @@ function QuestionCard({
       >
         <Trash2 size={14} />
       </button>
-    </button>
+    </div>
+  )
+}
+
+// ── Settings rail (right panel) ───────────────────────────────────────────────
+
+function SettingsRail({
+  questionnaire,
+  selectedQuestion,
+  titleDraft,
+  visibility,
+  category,
+  onTitleChange,
+  onTitleBlur,
+  onVisibilityChange,
+  onCategoryChange,
+  onShowCorrectAnswerChange,
+}: {
+  questionnaire: QuestionnaireDetail | null
+  selectedQuestion: Question | null
+  titleDraft: string
+  visibility: 'public' | 'private'
+  category: string | null
+  onTitleChange: (v: string) => void
+  onTitleBlur: () => void
+  onVisibilityChange: (v: 'public' | 'private') => void
+  onCategoryChange: (v: string | null) => void
+  onShowCorrectAnswerChange: (v: boolean) => void
+}) {
+  return (
+    <div className="flex w-64 shrink-0 flex-col gap-6 overflow-y-auto border-l border-[var(--color-border)] p-4">
+      <div>
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
+          Title
+        </p>
+        <Input
+          value={titleDraft}
+          onChange={(e) => onTitleChange(e.target.value)}
+          onBlur={onTitleBlur}
+          placeholder="Untitled Questionnaire"
+          className="w-full"
+        />
+      </div>
+
+      <div>
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
+          Visibility
+        </p>
+        <Select
+          value={visibility}
+          onValueChange={(v) => onVisibilityChange(v as 'public' | 'private')}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="public">Public</SelectItem>
+            <SelectItem value="private">Private</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
+          Category
+        </p>
+        <Select
+          value={category ?? 'none'}
+          onValueChange={(v) => onCategoryChange(v === 'none' ? null : v)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="None" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">None</SelectItem>
+            {CONTENT_CATEGORIES.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {selectedQuestion &&
+        (selectedQuestion.type === 'single_choice' ||
+          selectedQuestion.type === 'multiple_choice') && (
+          <div>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
+              Answer feedback
+            </p>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="show-correct-answer"
+                checked={selectedQuestion.showCorrectAnswer}
+                onCheckedChange={(v) => onShowCorrectAnswerChange(!!v)}
+              />
+              <label
+                htmlFor="show-correct-answer"
+                className="cursor-pointer text-sm leading-snug text-[var(--color-text-primary)]"
+              >
+                Show correct answer after submission
+              </label>
+            </div>
+          </div>
+        )}
+
+      {/* Status badge — only in edit mode */}
+      {questionnaire && (
+        <div>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
+            Status
+          </p>
+          <Badge variant="secondary">{STATUS_LABELS[questionnaire.status]}</Badge>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -347,31 +503,44 @@ export default function QuizBuilderPage() {
   const { id } = useParams({ strict: false }) as { id?: string }
 
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireDetail | null>(null)
+  const [localQuestions, setLocalQuestions] = useState<Question[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
+  const [localVisibility, setLocalVisibility] = useState<'public' | 'private'>('public')
+  const [localCategory, setLocalCategory] = useState<string | null>(null)
+  const [isDirty, setIsDirty] = useState(false)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // On mount: load or create
+  // Block navigation only on /quiz/new when dirty
+  const blocker = useBlocker({
+    shouldBlockFn: () => !id && isDirty,
+    withResolver: true,
+  })
+
+  // Load questionnaire when editing an existing one
   useEffect(() => {
-    if (!id) {
-      api
-        .post<{ questionnaire: QuestionnaireDetail }>('/api/questionnaires', {})
-        .then(({ questionnaire: q }) => {
-          navigate({ to: '/quiz/$id/edit', params: { id: q.id } })
-        })
-      return
-    }
+    if (!id) return
     api
       .get<{ questionnaire: QuestionnaireDetail }>(`/api/questionnaires/${id}`)
       .then(({ questionnaire: q }) => {
         setQuestionnaire(q)
         setTitleDraft(q.title)
+        setLocalVisibility(q.visibility)
+        setLocalCategory(q.category)
         if (q.questions.length > 0) setSelectedId(q.questions[0].id)
       })
-  }, [id, navigate])
+  }, [id])
 
-  const selectedQuestion = questionnaire?.questions.find((q) => q.id === selectedId) ?? null
+  // Unified questions list
+  const questions = questionnaire?.questions ?? localQuestions
+  const selectedQuestion = questions.find((q) => q.id === selectedId) ?? null
+
+  // Unified visibility and category
+  const visibility = questionnaire?.visibility ?? localVisibility
+  const category = questionnaire?.category ?? localCategory
 
   // ── Questionnaire actions ──────────────────────────────────────────────────
 
@@ -395,39 +564,130 @@ export default function QuizBuilderPage() {
     }
   }
 
-  function handleTitleBlur() {
-    if (!questionnaire || titleDraft === questionnaire.title) return
+  // Save everything for a new questionnaire (on /quiz/new)
+  async function saveNew(targetStatus: 'draft' | 'published') {
+    setIsSaving(true)
+    try {
+      const { questionnaire: q } = await api.post<{ questionnaire: QuestionnaireDetail }>(
+        '/api/questionnaires',
+        {
+          title: titleDraft || 'Untitled Questionnaire',
+          visibility: localVisibility,
+          category: localCategory,
+          status: targetStatus,
+        }
+      )
+
+      // Create questions + options sequentially
+      for (const lq of localQuestions) {
+        const { question: createdQ } = await api.post<{ question: Question }>(
+          `/api/questionnaires/${q.id}/questions`,
+          {
+            type: lq.type,
+            prompt: lq.prompt,
+            required: lq.required,
+            showCorrectAnswer: lq.showCorrectAnswer,
+            caseSensitive: lq.caseSensitive,
+            acceptableAnswers:
+              lq.acceptableAnswers !== null ? JSON.parse(lq.acceptableAnswers) : null,
+            position: lq.position,
+          }
+        )
+        for (const opt of lq.options) {
+          await api.post(`/api/questions/${createdQ.id}/options`, {
+            label: opt.label,
+            isCorrect: opt.isCorrect,
+          })
+        }
+      }
+
+      setIsDirty(false)
+      navigate({ to: '/quiz/$id/edit', params: { id: q.id } })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  async function handleTitleBlur() {
+    if (!questionnaire) return // on /quiz/new, no DB save on blur
+    if (titleDraft === questionnaire.title) return
     patchQuestionnaire({ title: titleDraft })
     save({ title: titleDraft })
   }
 
+  async function handleVisibilityChange(v: 'public' | 'private') {
+    setLocalVisibility(v)
+    if (questionnaire) {
+      patchQuestionnaire({ visibility: v })
+      save({ visibility: v })
+    }
+  }
+
+  async function handleCategoryChange(v: string | null) {
+    setLocalCategory(v)
+    if (questionnaire) {
+      patchQuestionnaire({ category: v })
+      save({ category: v })
+    }
+  }
+
+  async function handleSave() {
+    if (!questionnaire) {
+      await saveNew('draft')
+      return
+    }
+    save()
+  }
+
   async function handlePublish() {
+    if (!questionnaire) {
+      await saveNew('published')
+      return
+    }
     await save({ status: 'published' })
     patchQuestionnaire({ status: 'published' })
   }
 
   // ── Question actions ───────────────────────────────────────────────────────
 
-  async function addQuestion() {
-    if (!questionnaire) return
-    const { question } = await api.post<{ question: Question }>(
-      `/api/questionnaires/${questionnaire.id}/questions`,
-      { type: 'single_choice' }
-    )
-    setQuestionnaire({ ...questionnaire, questions: [...questionnaire.questions, question] })
-    setSelectedId(question.id)
+  function addQuestion() {
+    if (!questionnaire) {
+      // Local mode: no API call, just add to local state
+      const q = makeLocalQuestion(localQuestions.length)
+      setLocalQuestions((prev) => [...prev, q])
+      setSelectedId(q.id)
+      setIsDirty(true)
+      return
+    }
+    // DB mode
+    api
+      .post<{ question: Question }>(`/api/questionnaires/${questionnaire.id}/questions`, {
+        type: 'single_choice',
+      })
+      .then(({ question }) => {
+        setQuestionnaire({ ...questionnaire, questions: [...questionnaire.questions, question] })
+        setSelectedId(question.id)
+      })
   }
 
-  async function deleteQuestion(questionId: string) {
-    if (!questionnaire) return
+  function deleteQuestion(questionId: string) {
+    if (!questionnaire) {
+      const remaining = localQuestions.filter((q) => q.id !== questionId)
+      setLocalQuestions(remaining)
+      if (selectedId === questionId) setSelectedId(remaining[0]?.id ?? null)
+      return
+    }
     const remaining = questionnaire.questions.filter((q) => q.id !== questionId)
     setQuestionnaire({ ...questionnaire, questions: remaining })
     if (selectedId === questionId) setSelectedId(remaining[0]?.id ?? null)
-    await api.del(`/api/questions/${questionId}`)
+    api.del(`/api/questions/${questionId}`)
   }
 
-  function updateQuestionLocal(questionId: string, patch: Partial<Question>) {
-    if (!questionnaire) return
+  function updateQuestion(questionId: string, patch: Partial<Question>) {
+    if (!questionnaire) {
+      setLocalQuestions((prev) => prev.map((q) => (q.id === questionId ? { ...q, ...patch } : q)))
+      return
+    }
     setQuestionnaire({
       ...questionnaire,
       questions: questionnaire.questions.map((q) => (q.id === questionId ? { ...q, ...patch } : q)),
@@ -435,57 +695,109 @@ export default function QuizBuilderPage() {
   }
 
   function saveQuestionDebounced(questionId: string, patch: Partial<Question>) {
+    if (!questionnaire) return // local mode: no DB save
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(() => {
       api.put(`/api/questions/${questionId}`, patch)
-    }, 500)
+    }, 600)
   }
 
-  function handlePromptBlur(questionId: string, prompt: string) {
-    updateQuestionLocal(questionId, { prompt })
-    api.put(`/api/questions/${questionId}`, { prompt })
+  function handlePromptChange(questionId: string, prompt: string) {
+    updateQuestion(questionId, { prompt })
+    saveQuestionDebounced(questionId, { prompt })
   }
 
   function handleTypeChange(questionId: string, type: QuestionType) {
-    updateQuestionLocal(questionId, { type, options: [] })
-    api.put(`/api/questions/${questionId}`, { type })
+    updateQuestion(questionId, { type, options: [] })
+    if (questionnaire) api.put(`/api/questions/${questionId}`, { type })
   }
 
   function handleRequiredChange(questionId: string, required: boolean) {
-    updateQuestionLocal(questionId, { required })
+    updateQuestion(questionId, { required })
     saveQuestionDebounced(questionId, { required })
   }
 
   function handleShowCorrectAnswerChange(questionId: string, showCorrectAnswer: boolean) {
-    updateQuestionLocal(questionId, { showCorrectAnswer })
+    updateQuestion(questionId, { showCorrectAnswer })
     saveQuestionDebounced(questionId, { showCorrectAnswer })
   }
 
   function handleCaseSensitiveChange(questionId: string, caseSensitive: boolean) {
-    updateQuestionLocal(questionId, { caseSensitive })
+    updateQuestion(questionId, { caseSensitive })
     saveQuestionDebounced(questionId, { caseSensitive })
   }
 
   function handleAcceptableAnswersChange(questionId: string, answers: string[]) {
     const acceptableAnswers = JSON.stringify(answers)
-    updateQuestionLocal(questionId, { acceptableAnswers })
-    api.put(`/api/questions/${questionId}`, { acceptableAnswers: answers })
+    updateQuestion(questionId, { acceptableAnswers })
+    if (questionnaire) api.put(`/api/questions/${questionId}`, { acceptableAnswers: answers })
+  }
+
+  // ── Drag to reorder ────────────────────────────────────────────────────────
+
+  function handleDragStart(index: number) {
+    setDragIndex(index)
+  }
+
+  function handleDragOver(index: number) {
+    setDragOverIndex(index)
+  }
+
+  function handleDrop(dropIndex: number) {
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+    const qs = [...questions]
+    const [moved] = qs.splice(dragIndex, 1)
+    qs.splice(dropIndex, 0, moved)
+
+    if (questionnaire) {
+      setQuestionnaire({ ...questionnaire, questions: qs })
+      api.put(`/api/questionnaires/${questionnaire.id}/questions/reorder`, {
+        order: qs.map((q) => q.id),
+      })
+    } else {
+      setLocalQuestions(qs)
+    }
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }
+
+  function handleDragEnd() {
+    setDragIndex(null)
+    setDragOverIndex(null)
   }
 
   // ── Option actions ─────────────────────────────────────────────────────────
 
-  async function addOption(questionId: string) {
-    const { option } = await api.post<{ option: QuestionOption }>(
-      `/api/questions/${questionId}/options`,
-      {}
-    )
-    if (!questionnaire) return
-    setQuestionnaire({
-      ...questionnaire,
-      questions: questionnaire.questions.map((q) =>
-        q.id === questionId ? { ...q, options: [...q.options, option] } : q
-      ),
-    })
+  function addOption(questionId: string) {
+    if (!questionnaire) {
+      // Local mode
+      const position = questions.find((q) => q.id === questionId)?.options.length ?? 0
+      const newOpt: QuestionOption = {
+        id: nanoid(),
+        questionId,
+        label: '',
+        position,
+        isCorrect: false,
+      }
+      setLocalQuestions((prev) =>
+        prev.map((q) => (q.id === questionId ? { ...q, options: [...q.options, newOpt] } : q))
+      )
+      return
+    }
+    api
+      .post<{ option: QuestionOption }>(`/api/questions/${questionId}/options`, {})
+      .then(({ option }) => {
+        setQuestionnaire({
+          ...questionnaire,
+          questions: questionnaire.questions.map((q) =>
+            q.id === questionId ? { ...q, options: [...q.options, option] } : q
+          ),
+        })
+      })
   }
 
   function handleOptionChange(
@@ -493,7 +805,16 @@ export default function QuizBuilderPage() {
     optionId: string,
     patch: Partial<QuestionOption>
   ) {
-    if (!questionnaire) return
+    if (!questionnaire) {
+      setLocalQuestions((prev) =>
+        prev.map((q) =>
+          q.id === questionId
+            ? { ...q, options: q.options.map((o) => (o.id === optionId ? { ...o, ...patch } : o)) }
+            : q
+        )
+      )
+      return
+    }
     setQuestionnaire({
       ...questionnaire,
       questions: questionnaire.questions.map((q) =>
@@ -508,22 +829,29 @@ export default function QuizBuilderPage() {
     }, 500)
   }
 
-  async function deleteOption(questionId: string, optionId: string) {
-    if (!questionnaire) return
+  function deleteOption(questionId: string, optionId: string) {
+    if (!questionnaire) {
+      setLocalQuestions((prev) =>
+        prev.map((q) =>
+          q.id === questionId ? { ...q, options: q.options.filter((o) => o.id !== optionId) } : q
+        )
+      )
+      return
+    }
     setQuestionnaire({
       ...questionnaire,
       questions: questionnaire.questions.map((q) =>
         q.id === questionId ? { ...q, options: q.options.filter((o) => o.id !== optionId) } : q
       ),
     })
-    await api.del(`/api/question-options/${optionId}`)
+    api.del(`/api/question-options/${optionId}`)
   }
 
   // ── Loading state ──────────────────────────────────────────────────────────
 
-  if (!questionnaire) {
+  if (id && !questionnaire) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-accent)]" />
       </div>
     )
@@ -534,7 +862,7 @@ export default function QuizBuilderPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-[var(--color-border)] bg-[var(--color-bg-surface)] px-4 py-3">
+      <div className="flex shrink-0 items-center gap-3 border-b border-[var(--color-border)] px-4 py-3">
         <button
           type="button"
           onClick={() => navigate({ to: '/' })}
@@ -544,23 +872,12 @@ export default function QuizBuilderPage() {
           <ChevronLeft size={16} />
           Back
         </button>
-
-        <div className="flex flex-1 items-center gap-2">
-          <input
-            value={titleDraft}
-            onChange={(e) => setTitleDraft(e.target.value)}
-            onBlur={handleTitleBlur}
-            className="min-w-0 flex-1 bg-transparent text-base font-semibold text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-disabled)] focus:underline"
-            placeholder="Untitled Questionnaire"
-          />
-          <Badge variant="secondary">{STATUS_LABELS[questionnaire.status]}</Badge>
-        </div>
-
+        <div className="flex-1" />
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => save()} disabled={isSaving}>
+          <Button variant="outline" size="sm" onClick={handleSave} disabled={isSaving}>
             {isSaving ? 'Saving…' : 'Save'}
           </Button>
-          {questionnaire.status !== 'published' && (
+          {questionnaire?.status !== 'published' && (
             <Button size="sm" onClick={handlePublish} disabled={isSaving}>
               Publish
             </Button>
@@ -571,21 +888,26 @@ export default function QuizBuilderPage() {
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left panel — question list */}
-        <div className="flex w-64 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-subtle)] lg:w-72">
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {questionnaire.questions.length === 0 && (
+        <div className="flex w-64 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-subtle)]">
+          <div className="flex-1 space-y-2 overflow-y-auto p-3">
+            {questions.length === 0 && (
               <p className="py-8 text-center text-sm text-[var(--color-text-disabled)]">
                 No questions yet
               </p>
             )}
-            {questionnaire.questions.map((q, i) => (
+            {questions.map((q, i) => (
               <QuestionCard
                 key={q.id}
                 question={q}
                 index={i}
                 isActive={q.id === selectedId}
+                isDragOver={dragOverIndex === i}
                 onSelect={() => setSelectedId(q.id)}
                 onDelete={() => deleteQuestion(q.id)}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onDragEnd={handleDragEnd}
               />
             ))}
           </div>
@@ -597,18 +919,15 @@ export default function QuizBuilderPage() {
           </div>
         </div>
 
-        {/* Right panel — question editor */}
+        {/* Center — question editor */}
         <div className="flex-1 overflow-y-auto p-6">
           {selectedQuestion ? (
             <QuestionEditor
               key={selectedQuestion.id}
               question={selectedQuestion}
-              onPromptBlur={(prompt) => handlePromptBlur(selectedQuestion.id, prompt)}
+              onPromptChange={(prompt) => handlePromptChange(selectedQuestion.id, prompt)}
               onTypeChange={(type) => handleTypeChange(selectedQuestion.id, type)}
               onRequiredChange={(required) => handleRequiredChange(selectedQuestion.id, required)}
-              onShowCorrectAnswerChange={(v) =>
-                handleShowCorrectAnswerChange(selectedQuestion.id, v)
-              }
               onCaseSensitiveChange={(v) => handleCaseSensitiveChange(selectedQuestion.id, v)}
               onAcceptableAnswersChange={(answers) =>
                 handleAcceptableAnswersChange(selectedQuestion.id, answers)
@@ -625,7 +944,52 @@ export default function QuizBuilderPage() {
             </div>
           )}
         </div>
+
+        {/* Right panel — settings */}
+        <SettingsRail
+          questionnaire={questionnaire}
+          selectedQuestion={selectedQuestion}
+          titleDraft={titleDraft}
+          visibility={visibility}
+          category={category}
+          onTitleChange={(v) => {
+            setTitleDraft(v)
+            if (!id) setIsDirty(true)
+          }}
+          onTitleBlur={handleTitleBlur}
+          onVisibilityChange={handleVisibilityChange}
+          onCategoryChange={handleCategoryChange}
+          onShowCorrectAnswerChange={(v) =>
+            selectedQuestion ? handleShowCorrectAnswerChange(selectedQuestion.id, v) : undefined
+          }
+        />
       </div>
+
+      {/* Navigate-away guard dialog */}
+      {blocker.status === 'blocked' && (
+        <AlertDialog open>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Unsaved questionnaire</AlertDialogTitle>
+              <AlertDialogDescription>
+                You have unsaved changes. Save as a draft or discard?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => blocker.reset()}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel
+                onClick={async () => {
+                  await saveNew('draft')
+                  blocker.proceed()
+                }}
+              >
+                Save as draft
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => blocker.proceed()}>Discard</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   )
 }
