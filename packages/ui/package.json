@@ -4,11 +4,28 @@
   "version": "0.0.1",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./styles": "./src/styles/globals.css"
   },
   "dependencies": {
+    "@radix-ui/react-avatar": "latest",
+    "@radix-ui/react-checkbox": "latest",
+    "@radix-ui/react-dropdown-menu": "latest",
+    "@radix-ui/react-progress": "latest",
+    "@radix-ui/react-radio-group": "latest",
+    "@radix-ui/react-select": "latest",
+    "@radix-ui/react-separator": "latest",
+    "@radix-ui/react-slot": "latest",
+    "@radix-ui/react-tabs": "latest",
+    "@tiptap/react": "latest",
+    "@tiptap/starter-kit": "latest",
+    "class-variance-authority": "latest",
+    "clsx": "latest",
+    "lucide-react": "latest",
     "react": "^19.0.0",
-    "tailwindcss": "latest"
+    "tailwind-merge": "latest",
+    "tailwindcss": "latest",
+    "zustand": "latest"
   },
   "devDependencies": {
     "@types/react": "^19.0.0"

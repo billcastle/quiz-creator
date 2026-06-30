@@ -115,6 +115,11 @@ Is this a step-by-step procedure for a complex task?
 | ADR-003 | Drizzle ORM with Cloudflare D1 | Accepted |
 | ADR-004 | Cloudflare KV for Session Storage | Accepted |
 | ADR-005 | Biome for Linting and Formatting | Accepted |
+| ADR-006 | File-based theme engine with import.meta.glob | Accepted |
+| ADR-007 | TipTap v3 as rich text editor | Accepted |
+| ADR-008 | shadcn/ui as component foundation | Accepted |
+| ADR-009 | Questionnaire and Survey as separate domain types | Accepted |
+| ADR-010 | Pathless Layout Route Groups | Accepted |
 
 ### RFCs
 
@@ -126,19 +131,27 @@ Is this a step-by-step procedure for a complex task?
 
 | Title | Category | Status |
 |---|---|---|
-| *(none yet)* | — | — |
+| PATTERN-file-based-theme | Design System / Theming | Established |
+| PATTERN-navigation-callback-props | UI / Routing | Established |
 
 ### STANDARDs
 
 | Title | Applies To | Status |
 |---|---|---|
-| *(none yet)* | — | — |
+| STANDARD-design-token-styling | All UI components in packages/ui | Active |
+| STANDARD-ui-package-router-isolation | All components in packages/ui | Active |
 
 ### GUIDEs
 
 | Title | Audience | Status |
 |---|---|---|
-| *(none yet)* | — | — |
+| GUIDE-adding-theme | Developers and designers | Current |
+
+---
+
+## Glossary
+
+- [GLOSSARY.md](GLOSSARY.md) — Canonical definitions for all domain terms (Questionnaire, Survey, Taker, Attempt, etc.)
 
 ---
 

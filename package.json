@@ -10,8 +10,8 @@
     "dev:web": "npm run dev -w @quiz/web",
     "dev:api": "npm run dev -w @quiz/api",
     "build": "npm run build -w @quiz/web && npm run build -w @quiz/api",
-    "lint": "biome check .",
-    "format": "biome format --write .",
+    "lint": "biome check apps/web/src apps/api/src packages/ui/src packages/db packages/shared",
+    "format": "biome format --write apps/web/src apps/api/src packages/ui/src packages/db packages/shared",
     "typecheck": "tsc --noEmit -p apps/web/tsconfig.json && tsc --noEmit -p apps/api/tsconfig.json && tsc --noEmit -p packages/db/tsconfig.json && tsc --noEmit -p packages/shared/tsconfig.json && tsc --noEmit -p packages/ui/tsconfig.json",
     "test:e2e": "playwright test",
     "db:migrate:local": "wrangler d1 migrations apply quiz-db --local --config apps/api/wrangler.toml",
@@ -21,5 +21,10 @@
     "@biomejs/biome": "latest",
     "@playwright/test": "latest",
     "typescript": "latest"
+  },
+  "dependencies": {
+    "@fontsource-variable/elms-sans": "^5.2.1",
+    "@tiptap/react": "^3.27.1",
+    "@tiptap/starter-kit": "^3.27.1"
   }
 }
