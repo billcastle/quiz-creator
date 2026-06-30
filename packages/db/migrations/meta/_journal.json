@@ -8,6 +8,13 @@
       "when": 1782793306419,
       "tag": "0000_familiar_warpath",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1782811203182,
+      "tag": "0001_minor_ironclad",
+      "breakpoints": true
     }
   ]
 }

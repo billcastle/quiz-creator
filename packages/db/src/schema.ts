@@ -49,3 +49,42 @@ export const verification = sqliteTable('verification', {
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })
+
+export const questionnaires = sqliteTable('questionnaires', {
+  id: text('id').primaryKey(),
+  creatorId: text('creator_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  title: text('title').notNull().default('Untitled Questionnaire'),
+  status: text('status', { enum: ['draft', 'published', 'archived'] })
+    .notNull()
+    .default('draft'),
+  visibility: text('visibility', { enum: ['public', 'private'] })
+    .notNull()
+    .default('private'),
+  timeLimitSeconds: integer('time_limit_seconds'),
+  allowMultipleAttempts: integer('allow_multiple_attempts', { mode: 'boolean' })
+    .notNull()
+    .default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+})
+
+export const surveys = sqliteTable('surveys', {
+  id: text('id').primaryKey(),
+  creatorId: text('creator_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  title: text('title').notNull().default('Untitled Survey'),
+  status: text('status', { enum: ['draft', 'published', 'archived'] })
+    .notNull()
+    .default('draft'),
+  visibility: text('visibility', { enum: ['public', 'private'] })
+    .notNull()
+    .default('private'),
+  allowMultipleAttempts: integer('allow_multiple_attempts', { mode: 'boolean' })
+    .notNull()
+    .default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+})
