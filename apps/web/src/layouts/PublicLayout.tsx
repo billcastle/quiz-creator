@@ -38,50 +38,46 @@ export function PublicLayout() {
         onHamburgerClick={() => setSideNavOpen(true)}
       />
       <div className="flex flex-1 overflow-hidden">
-        {isAuthenticated && (
-          <>
-            {/* Desktop sidebar */}
-            <div className="hidden lg:block">
+        {/* Desktop sidebar */}
+        <div className="hidden lg:block">
+          <SideNav
+            activePath={location.pathname}
+            onNavigate={handleNavigate}
+            onCreateQuiz={() => navigate({ to: '/quiz/new' })}
+            onCreateSurvey={() => navigate({ to: '/survey/new' })}
+          />
+        </div>
+
+        {/* Mobile sidebar overlay */}
+        {sideNavOpen && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+            className="fixed inset-0 z-40 lg:hidden"
+          >
+            <button
+              type="button"
+              className="absolute inset-0 h-full w-full cursor-default bg-black/50"
+              onClick={() => setSideNavOpen(false)}
+              aria-label="Close navigation menu"
+              tabIndex={-1}
+            />
+            <div className="absolute left-0 top-0 z-10 h-full">
               <SideNav
                 activePath={location.pathname}
                 onNavigate={handleNavigate}
-                onCreateQuiz={() => navigate({ to: '/quiz/new' })}
-                onCreateSurvey={() => navigate({ to: '/survey/new' })}
+                onCreateQuiz={() => {
+                  navigate({ to: '/quiz/new' })
+                  setSideNavOpen(false)
+                }}
+                onCreateSurvey={() => {
+                  navigate({ to: '/survey/new' })
+                  setSideNavOpen(false)
+                }}
               />
             </div>
-
-            {/* Mobile sidebar overlay */}
-            {sideNavOpen && (
-              <div
-                role="dialog"
-                aria-modal="true"
-                aria-label="Navigation menu"
-                className="fixed inset-0 z-40 lg:hidden"
-              >
-                <button
-                  type="button"
-                  className="absolute inset-0 h-full w-full cursor-default bg-black/50"
-                  onClick={() => setSideNavOpen(false)}
-                  aria-label="Close navigation menu"
-                  tabIndex={-1}
-                />
-                <div className="absolute left-0 top-0 z-10 h-full">
-                  <SideNav
-                    activePath={location.pathname}
-                    onNavigate={handleNavigate}
-                    onCreateQuiz={() => {
-                      navigate({ to: '/quiz/new' })
-                      setSideNavOpen(false)
-                    }}
-                    onCreateSurvey={() => {
-                      navigate({ to: '/survey/new' })
-                      setSideNavOpen(false)
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-          </>
+          </div>
         )}
 
         <main className="flex-1 overflow-y-auto p-6">
