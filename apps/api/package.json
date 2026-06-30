@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@better-auth/infra": "^0.3.4",
     "@quiz/db": "*",
     "@quiz/shared": "*",
     "better-auth": "latest",

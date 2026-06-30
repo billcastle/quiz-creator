@@ -1,15 +1,15 @@
 import { SideNav, TopNav } from '@quiz/ui'
 import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useState } from 'react'
-import { stubSignOut } from '../lib/auth-stub'
+import { authClient } from '../lib/auth-client'
 
 export function AuthenticatedLayout() {
   const navigate = useNavigate()
   const { location } = useRouterState()
   const [sideNavOpen, setSideNavOpen] = useState(false)
 
-  function handleSignOut() {
-    stubSignOut()
+  async function handleSignOut() {
+    await authClient.signOut()
     navigate({ to: '/sign-in' })
   }
 

@@ -4,12 +4,13 @@ compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-CORS_ORIGIN = "http://localhost:5173"
+CORS_ORIGIN = "http://localhost:5176"
 
 [[d1_databases]]
 binding = "QUIZ_DB"
 database_name = "quiz-db"
 database_id = "0a558ed7-baa9-4991-9886-a37540f680bd"
+migrations_dir = "../../packages/db/migrations"
 
 [[kv_namespaces]]
 binding = "QUIZ_KV"
@@ -17,4 +18,4 @@ id = "6073df4a8bf84a7585941507daf917f4"
 preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
 
 [env.production]
-vars = { CORS_ORIGIN = "https://tanong.com" }
+vars = { CORS_ORIGIN = "http://localhost:5173" }

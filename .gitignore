@@ -4,6 +4,8 @@ node_modules/
 dist/
 .env.local
 .env.*.local
+.dev.vars
+apps/api/.dev.vars
 *.tsbuildinfo
 .wrangler/
 .DS_Store

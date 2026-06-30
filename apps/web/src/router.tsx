@@ -8,7 +8,7 @@ import {
 import { AuthenticatedLayout } from './layouts/AuthenticatedLayout'
 import { TakeLayout } from './layouts/TakeLayout'
 import { UnauthenticatedLayout } from './layouts/UnauthenticatedLayout'
-import { isAuthenticatedStub } from './lib/auth-stub'
+import { authClient } from './lib/auth-client'
 import DesignSystemPage from './pages/DesignSystemPage'
 import HomePage from './pages/HomePage'
 import QuizBuilderPage from './pages/QuizBuilderPage'
@@ -29,10 +29,9 @@ const authenticatedRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: '_authenticated',
   component: AuthenticatedLayout,
-  beforeLoad: () => {
-    if (!isAuthenticatedStub()) {
-      throw redirect({ to: '/sign-in' })
-    }
+  beforeLoad: async () => {
+    const { data: session } = await authClient.getSession()
+    if (!session) throw redirect({ to: '/sign-in' })
   },
 })
 
