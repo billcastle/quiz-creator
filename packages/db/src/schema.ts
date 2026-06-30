@@ -70,6 +70,44 @@ export const questionnaires = sqliteTable('questionnaires', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 })
 
+export const sections = sqliteTable('sections', {
+  id: text('id').primaryKey(),
+  parentType: text('parent_type', { enum: ['questionnaire', 'survey'] }).notNull(),
+  parentId: text('parent_id').notNull(),
+  title: text('title').notNull().default(''),
+  position: integer('position').notNull().default(0),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+})
+
+export const questions = sqliteTable('questions', {
+  id: text('id').primaryKey(),
+  parentType: text('parent_type', { enum: ['questionnaire', 'survey'] }).notNull(),
+  parentId: text('parent_id').notNull(),
+  sectionId: text('section_id'),
+  type: text('type', {
+    enum: ['single_choice', 'multiple_choice', 'short_answer', 'long_answer'],
+  }).notNull(),
+  prompt: text('prompt').notNull().default(''),
+  position: integer('position').notNull().default(0),
+  required: integer('required', { mode: 'boolean' }).notNull().default(true),
+  showCorrectAnswer: integer('show_correct_answer', { mode: 'boolean' }).notNull().default(false),
+  caseSensitive: integer('case_sensitive', { mode: 'boolean' }).notNull().default(false),
+  acceptableAnswers: text('acceptable_answers'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+})
+
+export const questionOptions = sqliteTable('question_options', {
+  id: text('id').primaryKey(),
+  questionId: text('question_id')
+    .notNull()
+    .references(() => questions.id, { onDelete: 'cascade' }),
+  label: text('label').notNull().default(''),
+  position: integer('position').notNull().default(0),
+  isCorrect: integer('is_correct', { mode: 'boolean' }).notNull().default(false),
+})
+
 export const surveys = sqliteTable('surveys', {
   id: text('id').primaryKey(),
   creatorId: text('creator_id')

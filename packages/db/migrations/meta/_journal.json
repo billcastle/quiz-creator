@@ -15,6 +15,13 @@
       "when": 1782811203182,
       "tag": "0001_minor_ironclad",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1782813427800,
+      "tag": "0002_ambiguous_iron_monger",
+      "breakpoints": true
     }
   ]
 }
