@@ -23,6 +23,7 @@ export function AuthenticatedLayout() {
       <TopNav
         isAuthenticated
         onLogoClick={() => navigate({ to: '/' })}
+        onProfile={() => navigate({ to: '/' })}
         onSignOut={handleSignOut}
         onHamburgerClick={() => setSideNavOpen(true)}
       />

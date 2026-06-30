@@ -17,6 +17,9 @@ export interface TopNavProps {
   isAuthenticated?: boolean
   avatarFallback?: string
   onLogoClick?: () => void
+  onSignIn?: () => void
+  onSignUp?: () => void
+  onProfile?: () => void
   onSignOut?: () => void
   onHamburgerClick?: () => void
 }
@@ -28,6 +31,9 @@ export function TopNav({
   isAuthenticated = false,
   avatarFallback = 'U',
   onLogoClick,
+  onSignIn,
+  onSignUp,
+  onProfile,
   onSignOut,
   onHamburgerClick,
 }: TopNavProps) {
@@ -59,7 +65,7 @@ export function TopNav({
 
       <div className="flex items-center gap-2">
         <ThemeToggle />
-        {isAuthenticated && (
+        {isAuthenticated ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar size="sm" className="cursor-pointer">
@@ -67,9 +73,19 @@ export function TopNav({
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onProfile}>Profile</DropdownMenuItem>
               <DropdownMenuItem onClick={onSignOut}>Sign out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={onSignIn}>
+              Sign in
+            </Button>
+            <Button size="sm" onClick={onSignUp}>
+              Sign up
+            </Button>
+          </div>
         )}
       </div>
     </header>
