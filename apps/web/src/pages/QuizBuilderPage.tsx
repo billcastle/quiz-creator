@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@quiz/ui'
 import { useBlocker, useNavigate, useParams } from '@tanstack/react-router'
-import { ChevronLeft, GripVertical, HelpCircle, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, GripVertical, Plus, Trash2 } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../lib/api'
@@ -213,7 +213,7 @@ function QuestionEditor({
 }) {
   return (
     <div className="space-y-6">
-      {/* Question type — single row with tooltips */}
+      {/* Question type */}
       <div>
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
           Question type
@@ -224,29 +224,19 @@ function QuestionEditor({
               key={t}
               type="button"
               onClick={() => onTypeChange(t)}
-              className={`group/type relative shrink-0 rounded-md px-3 py-1.5 text-sm transition-colors ${
+              className={`shrink-0 rounded-md px-3 py-1.5 text-sm transition-colors ${
                 question.type === t
                   ? 'bg-[var(--color-bg-surface)] font-medium text-[var(--color-text-primary)] shadow-sm'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
               }`}
             >
-              <span className="flex items-center gap-1">
-                {TYPE_LABELS[t]}
-                <span className="group/tip relative inline-flex">
-                  <HelpCircle
-                    size={11}
-                    className="text-[var(--color-text-disabled)] opacity-60"
-                    aria-hidden="true"
-                  />
-                  <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-44 -translate-x-1/2 rounded-md bg-[var(--color-text-primary)] px-2.5 py-2 text-xs leading-snug text-[var(--color-bg-surface)] opacity-0 shadow-md transition-opacity group-hover/tip:opacity-100">
-                    {TYPE_DESCRIPTIONS[t]}
-                    <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[var(--color-text-primary)]" />
-                  </span>
-                </span>
-              </span>
+              {TYPE_LABELS[t]}
             </button>
           ))}
         </div>
+        <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+          {TYPE_DESCRIPTIONS[question.type]}
+        </p>
       </div>
 
       {/* Prompt — rich text */}
