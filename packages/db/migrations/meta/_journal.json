@@ -29,6 +29,13 @@
       "when": 1782821340139,
       "tag": "0003_nice_talisman",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1782877435237,
+      "tag": "0004_smart_pandemic",
+      "breakpoints": true
     }
   ]
 }

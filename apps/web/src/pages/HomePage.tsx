@@ -75,10 +75,19 @@ function ContentCard({
 }) {
   const navigate = useNavigate()
   const editRoute =
-    item.kind === 'questionnaire' ? `/quiz/${item.id}/edit` : `/survey/${item.id}/edit`
+    item.kind === 'questionnaire'
+      ? item.shortId
+        ? `/quiz/${item.shortId}/edit`
+        : `/quiz/${item.id}/edit`
+      : `/survey/${item.id}/edit`
 
   return (
-    <div className="group flex flex-col gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-5 transition-shadow hover:shadow-md">
+    // biome-ignore lint/a11y/noStaticElementInteractions: card click navigates to edit; keyboard handled by inner buttons
+    // biome-ignore lint/a11y/useKeyWithClickEvents: card click navigates to edit; keyboard handled by inner buttons
+    <div
+      className="group relative flex cursor-pointer flex-col gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-5 transition-shadow hover:shadow-md"
+      onClick={() => navigate({ to: editRoute })}
+    >
       <div className="flex flex-wrap gap-2">
         {item.kind === 'questionnaire' ? (
           <Badge variant="quiz">Questionnaire</Badge>
@@ -92,22 +101,30 @@ function ContentCard({
       </p>
       <div className="flex items-center justify-between">
         <span className="text-xs text-[var(--color-text-secondary)]">
-          {formatDate(item.createdAt)}
+          Updated {formatDate(item.updatedAt)}
         </span>
         <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             type="button"
-            onClick={() => navigate({ to: editRoute })}
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate({ to: editRoute })
+            }}
             className="rounded-md p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-text-primary)]"
-            aria-label="Edit"
+            aria-label={`Edit ${item.title || 'untitled'}`}
+            title="Edit"
           >
             <Pencil size={14} />
           </button>
           <button
             type="button"
-            onClick={() => onDelete(item.id, item.kind)}
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete(item.id, item.kind)
+            }}
             className="rounded-md p-1.5 text-[var(--color-text-secondary)] hover:bg-red-50 hover:text-red-500"
-            aria-label="Delete"
+            aria-label={`Delete ${item.title || 'untitled'}`}
+            title="Delete"
           >
             <Trash2 size={14} />
           </button>
@@ -155,7 +172,7 @@ export default function HomePage() {
   const allItems: ContentItem[] = [
     ...questionnaires.map((q) => ({ kind: 'questionnaire' as const, ...q })),
     ...surveys.map((s) => ({ kind: 'survey' as const, ...s })),
-  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  ].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 
   const visibleItems =
     filter === 'questionnaires'

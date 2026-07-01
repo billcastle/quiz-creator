@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@quiz/ui'
 import { useBlocker, useNavigate, useParams } from '@tanstack/react-router'
-import { ChevronLeft, GripVertical, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, GripVertical, HelpCircle, Plus, Trash2 } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../lib/api'
@@ -33,7 +33,16 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   long_answer: 'Long',
 }
 
+const TYPE_DESCRIPTIONS: Record<QuestionType, string> = {
+  single_choice: 'One correct answer selected from a list of options.',
+  multiple_choice: 'One or more correct answers selected from a list of options.',
+  short_answer: 'A brief typed response, graded against acceptable answers.',
+  long_answer: 'An open-ended typed response. Not auto-graded.',
+}
+
 const STATUS_LABELS = { draft: 'Draft', published: 'Published', archived: 'Archived' }
+
+const MIN_SAVE_MS = 700
 
 function makeLocalQuestion(position: number): Question {
   const now = new Date().toISOString()
@@ -105,6 +114,7 @@ function OptionsEditor({
             onClick={() => onOptionDelete(opt.id)}
             className="shrink-0 text-[var(--color-text-disabled)] hover:text-[var(--color-text-secondary)]"
             aria-label="Delete option"
+            title="Delete option"
           >
             <Trash2 size={14} />
           </button>
@@ -186,7 +196,6 @@ function QuestionEditor({
   question,
   onPromptChange,
   onTypeChange,
-  onRequiredChange,
   onCaseSensitiveChange,
   onAcceptableAnswersChange,
   onOptionAdd,
@@ -196,7 +205,6 @@ function QuestionEditor({
   question: Question
   onPromptChange: (prompt: string) => void
   onTypeChange: (type: QuestionType) => void
-  onRequiredChange: (required: boolean) => void
   onCaseSensitiveChange: (v: boolean) => void
   onAcceptableAnswersChange: (answers: string[]) => void
   onOptionAdd: () => void
@@ -205,7 +213,7 @@ function QuestionEditor({
 }) {
   return (
     <div className="space-y-6">
-      {/* Question type — single row */}
+      {/* Question type — single row with tooltips */}
       <div>
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
           Question type
@@ -216,13 +224,26 @@ function QuestionEditor({
               key={t}
               type="button"
               onClick={() => onTypeChange(t)}
-              className={`shrink-0 rounded-md px-3 py-1.5 text-sm transition-colors ${
+              className={`group/type relative shrink-0 rounded-md px-3 py-1.5 text-sm transition-colors ${
                 question.type === t
                   ? 'bg-[var(--color-bg-surface)] font-medium text-[var(--color-text-primary)] shadow-sm'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
               }`}
             >
-              {TYPE_LABELS[t]}
+              <span className="flex items-center gap-1">
+                {TYPE_LABELS[t]}
+                <span className="group/tip relative inline-flex">
+                  <HelpCircle
+                    size={11}
+                    className="text-[var(--color-text-disabled)] opacity-60"
+                    aria-hidden="true"
+                  />
+                  <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-44 -translate-x-1/2 rounded-md bg-[var(--color-text-primary)] px-2.5 py-2 text-xs leading-snug text-[var(--color-bg-surface)] opacity-0 shadow-md transition-opacity group-hover/tip:opacity-100">
+                    {TYPE_DESCRIPTIONS[t]}
+                    <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[var(--color-text-primary)]" />
+                  </span>
+                </span>
+              </span>
             </button>
           ))}
         </div>
@@ -238,21 +259,6 @@ function QuestionEditor({
           onChange={onPromptChange}
           placeholder="Enter your question…"
         />
-      </div>
-
-      {/* Required */}
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id={`required-${question.id}`}
-          checked={question.required}
-          onCheckedChange={(v) => onRequiredChange(!!v)}
-        />
-        <label
-          htmlFor={`required-${question.id}`}
-          className="cursor-pointer text-sm text-[var(--color-text-primary)]"
-        >
-          Required
-        </label>
       </div>
 
       {/* Type-specific */}
@@ -373,6 +379,7 @@ function QuestionCard({
         }}
         className="shrink-0 text-[var(--color-text-disabled)] hover:text-[var(--color-text-secondary)]"
         aria-label="Delete question"
+        title="Delete question"
       >
         <Trash2 size={14} />
       </button>
@@ -500,7 +507,8 @@ function SettingsRail({
 
 export default function QuizBuilderPage() {
   const navigate = useNavigate()
-  const { id } = useParams({ strict: false }) as { id?: string }
+  // URL param is shortId (8-char) on edit routes, undefined on /quiz/new
+  const { shortId } = useParams({ strict: false }) as { shortId?: string }
 
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireDetail | null>(null)
   const [localQuestions, setLocalQuestions] = useState<Question[]>([])
@@ -512,19 +520,25 @@ export default function QuizBuilderPage() {
   const [isDirty, setIsDirty] = useState(false)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  // Pending type change — used for confirmation dialog when switching away from choice type
+  const [pendingTypeChange, setPendingTypeChange] = useState<{
+    questionId: string
+    type: QuestionType
+  } | null>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Block navigation only on /quiz/new when dirty
   const blocker = useBlocker({
-    shouldBlockFn: () => !id && isDirty,
+    shouldBlockFn: () => !shortId && isDirty,
     withResolver: true,
   })
 
   // Load questionnaire when editing an existing one
   useEffect(() => {
-    if (!id) return
+    if (!shortId) return
+    const sid = shortId
     api
-      .get<{ questionnaire: QuestionnaireDetail }>(`/api/questionnaires/${id}`)
+      .get<{ questionnaire: QuestionnaireDetail }>(`/api/questionnaires/${sid}`)
       .then(({ questionnaire: q }) => {
         setQuestionnaire(q)
         setTitleDraft(q.title)
@@ -532,7 +546,11 @@ export default function QuizBuilderPage() {
         setLocalCategory(q.category)
         if (q.questions.length > 0) setSelectedId(q.questions[0].id)
       })
-  }, [id])
+      .catch(() => {
+        // Non-owner or not found — redirect to taker/view page
+        navigate({ to: '/quiz/$shortId', params: { shortId: sid }, replace: true })
+      })
+  }, [shortId, navigate])
 
   // Unified questions list
   const questions = questionnaire?.questions ?? localQuestions
@@ -541,6 +559,21 @@ export default function QuizBuilderPage() {
   // Unified visibility and category
   const visibility = questionnaire?.visibility ?? localVisibility
   const category = questionnaire?.category ?? localCategory
+
+  // ── Min-duration saving state helper ──────────────────────────────────────
+
+  async function withSaving<T>(fn: () => Promise<T>): Promise<T> {
+    setIsSaving(true)
+    const start = Date.now()
+    try {
+      return await fn()
+    } finally {
+      const elapsed = Date.now() - start
+      const remaining = MIN_SAVE_MS - elapsed
+      if (remaining > 0) await new Promise((r) => setTimeout(r, remaining))
+      setIsSaving(false)
+    }
+  }
 
   // ── Questionnaire actions ──────────────────────────────────────────────────
 
@@ -552,22 +585,17 @@ export default function QuizBuilderPage() {
   async function save(patch?: Partial<QuestionnaireDetail>) {
     if (!questionnaire) return
     const payload = patch ?? { title: titleDraft }
-    setIsSaving(true)
-    try {
+    await withSaving(async () => {
       const { questionnaire: updated } = await api.put<{ questionnaire: QuestionnaireDetail }>(
-        `/api/questionnaires/${questionnaire.id}`,
+        `/api/questionnaires/${questionnaire.shortId ?? questionnaire.id}`,
         payload
       )
       setQuestionnaire((prev) => (prev ? { ...prev, ...updated, questions: prev.questions } : prev))
-    } finally {
-      setIsSaving(false)
-    }
+    })
   }
 
-  // Save everything for a new questionnaire (on /quiz/new)
   async function saveNew(targetStatus: 'draft' | 'published') {
-    setIsSaving(true)
-    try {
+    await withSaving(async () => {
       const { questionnaire: q } = await api.post<{ questionnaire: QuestionnaireDetail }>(
         '/api/questionnaires',
         {
@@ -578,7 +606,6 @@ export default function QuizBuilderPage() {
         }
       )
 
-      // Create questions + options sequentially
       for (const lq of localQuestions) {
         const { question: createdQ } = await api.post<{ question: Question }>(
           `/api/questionnaires/${q.id}/questions`,
@@ -602,14 +629,12 @@ export default function QuizBuilderPage() {
       }
 
       setIsDirty(false)
-      navigate({ to: '/quiz/$id/edit', params: { id: q.id } })
-    } finally {
-      setIsSaving(false)
-    }
+      navigate({ to: '/quiz/$shortId/edit', params: { shortId: q.shortId ?? q.id } })
+    })
   }
 
   async function handleTitleBlur() {
-    if (!questionnaire) return // on /quiz/new, no DB save on blur
+    if (!questionnaire) return
     if (titleDraft === questionnaire.title) return
     patchQuestionnaire({ title: titleDraft })
     save({ title: titleDraft })
@@ -652,14 +677,12 @@ export default function QuizBuilderPage() {
 
   function addQuestion() {
     if (!questionnaire) {
-      // Local mode: no API call, just add to local state
       const q = makeLocalQuestion(localQuestions.length)
       setLocalQuestions((prev) => [...prev, q])
       setSelectedId(q.id)
       setIsDirty(true)
       return
     }
-    // DB mode
     api
       .post<{ question: Question }>(`/api/questionnaires/${questionnaire.id}/questions`, {
         type: 'single_choice',
@@ -695,7 +718,7 @@ export default function QuizBuilderPage() {
   }
 
   function saveQuestionDebounced(questionId: string, patch: Partial<Question>) {
-    if (!questionnaire) return // local mode: no DB save
+    if (!questionnaire) return
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(() => {
       api.put(`/api/questions/${questionId}`, patch)
@@ -708,13 +731,26 @@ export default function QuizBuilderPage() {
   }
 
   function handleTypeChange(questionId: string, type: QuestionType) {
-    updateQuestion(questionId, { type, options: [] })
-    if (questionnaire) api.put(`/api/questions/${questionId}`, { type })
+    const question = questions.find((q) => q.id === questionId)
+    if (!question) return
+
+    const isChoiceType = (t: QuestionType) => t === 'single_choice' || t === 'multiple_choice'
+    const leavingChoiceType = isChoiceType(question.type) && !isChoiceType(type)
+    const hasOptions = question.options.some((o) => o.label.trim() !== '')
+
+    if (leavingChoiceType && hasOptions) {
+      // Ask for confirmation before discarding options
+      setPendingTypeChange({ questionId, type })
+      return
+    }
+
+    applyTypeChange(questionId, type, leavingChoiceType)
   }
 
-  function handleRequiredChange(questionId: string, required: boolean) {
-    updateQuestion(questionId, { required })
-    saveQuestionDebounced(questionId, { required })
+  function applyTypeChange(questionId: string, type: QuestionType, clearOptions: boolean) {
+    updateQuestion(questionId, { type, ...(clearOptions ? { options: [] } : {}) })
+    if (questionnaire) api.put(`/api/questions/${questionId}`, { type })
+    setPendingTypeChange(null)
   }
 
   function handleShowCorrectAnswerChange(questionId: string, showCorrectAnswer: boolean) {
@@ -774,7 +810,6 @@ export default function QuizBuilderPage() {
 
   function addOption(questionId: string) {
     if (!questionnaire) {
-      // Local mode
       const position = questions.find((q) => q.id === questionId)?.options.length ?? 0
       const newOpt: QuestionOption = {
         id: nanoid(),
@@ -849,7 +884,7 @@ export default function QuizBuilderPage() {
 
   // ── Loading state ──────────────────────────────────────────────────────────
 
-  if (id && !questionnaire) {
+  if (shortId && !questionnaire) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-accent)]" />
@@ -868,6 +903,7 @@ export default function QuizBuilderPage() {
           onClick={() => navigate({ to: '/' })}
           className="flex items-center gap-1 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
           aria-label="Back to home"
+          title="Back to home"
         >
           <ChevronLeft size={16} />
           Back
@@ -912,7 +948,7 @@ export default function QuizBuilderPage() {
             ))}
           </div>
           <div className="shrink-0 border-t border-[var(--color-border)] p-3">
-            <Button variant="outline" size="sm" className="w-full" onClick={addQuestion}>
+            <Button size="sm" className="w-full" onClick={addQuestion}>
               <Plus size={14} className="mr-1" />
               Add question
             </Button>
@@ -927,7 +963,6 @@ export default function QuizBuilderPage() {
               question={selectedQuestion}
               onPromptChange={(prompt) => handlePromptChange(selectedQuestion.id, prompt)}
               onTypeChange={(type) => handleTypeChange(selectedQuestion.id, type)}
-              onRequiredChange={(required) => handleRequiredChange(selectedQuestion.id, required)}
               onCaseSensitiveChange={(v) => handleCaseSensitiveChange(selectedQuestion.id, v)}
               onAcceptableAnswersChange={(answers) =>
                 handleAcceptableAnswersChange(selectedQuestion.id, answers)
@@ -954,7 +989,7 @@ export default function QuizBuilderPage() {
           category={category}
           onTitleChange={(v) => {
             setTitleDraft(v)
-            if (!id) setIsDirty(true)
+            if (!shortId) setIsDirty(true)
           }}
           onTitleBlur={handleTitleBlur}
           onVisibilityChange={handleVisibilityChange}
@@ -990,6 +1025,42 @@ export default function QuizBuilderPage() {
           </AlertDialogContent>
         </AlertDialog>
       )}
+
+      {/* Question type switch confirmation */}
+      {pendingTypeChange &&
+        (() => {
+          const isChoiceType = (t: QuestionType) => t === 'single_choice' || t === 'multiple_choice'
+          const leavingChoiceType = !isChoiceType(pendingTypeChange.type)
+          return (
+            <AlertDialog open>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Switch question type?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Switching to {TYPE_LABELS[pendingTypeChange.type].toLowerCase()} answer will
+                    remove your existing answer options.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setPendingTypeChange(null)}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() =>
+                      applyTypeChange(
+                        pendingTypeChange.questionId,
+                        pendingTypeChange.type,
+                        leavingChoiceType
+                      )
+                    }
+                  >
+                    Switch
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )
+        })()}
     </div>
   )
 }

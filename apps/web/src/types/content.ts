@@ -4,6 +4,8 @@ export type QuestionType = 'single_choice' | 'multiple_choice' | 'short_answer' 
 
 export type Questionnaire = {
   id: string
+  shortId: string | null
+  slug: string | null
   title: string
   status: ContentStatus
   visibility: ContentVisibility

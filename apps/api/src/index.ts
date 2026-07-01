@@ -1,8 +1,21 @@
 import { createDb, schema } from '@quiz/db'
-import { asc, desc, eq } from 'drizzle-orm'
+import { asc, desc, eq, or } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { nanoid } from 'nanoid'
 import { createAuth } from './lib/auth'
+
+function toSlug(title: string): string {
+  return (
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') || 'untitled'
+  )
+}
 
 // Cloudflare Workers bindings — extend as new bindings are added
 type Bindings = {
@@ -36,7 +49,7 @@ app.get('/api/questionnaires', async (c) => {
     .select()
     .from(schema.questionnaires)
     .where(eq(schema.questionnaires.creatorId, session.user.id))
-    .orderBy(desc(schema.questionnaires.createdAt))
+    .orderBy(desc(schema.questionnaires.updatedAt))
 
   return c.json({ questionnaires: rows })
 })
@@ -64,15 +77,18 @@ app.post('/api/questionnaires', async (c) => {
   const db = createDb(c.env.QUIZ_DB)
   const now = new Date()
   const id = crypto.randomUUID()
+  const title = body.title ?? 'Untitled Questionnaire'
 
   await db.insert(schema.questionnaires).values({
     id,
     creatorId: session.user.id,
-    title: body.title ?? 'Untitled Questionnaire',
+    title,
     status: body.status ?? 'draft',
     visibility: body.visibility ?? 'public',
     allowMultipleAttempts: false,
     category: body.category ?? null,
+    shortId: nanoid(8),
+    slug: toSlug(title),
     createdAt: now,
     updatedAt: now,
   })
@@ -85,16 +101,34 @@ app.post('/api/questionnaires', async (c) => {
   return c.json({ questionnaire: row }, 201)
 })
 
+// Public endpoint: resolve shortId → {shortId, slug} for URL redirect
+app.get('/api/q/:shortId', async (c) => {
+  const db = createDb(c.env.QUIZ_DB)
+  const [q] = await db
+    .select({ shortId: schema.questionnaires.shortId, slug: schema.questionnaires.slug })
+    .from(schema.questionnaires)
+    .where(eq(schema.questionnaires.shortId, c.req.param('shortId')))
+
+  if (!q) return c.json({ error: 'Not found', code: 'NOT_FOUND' }, 404)
+  return c.json({ shortId: q.shortId, slug: q.slug })
+})
+
 app.get('/api/questionnaires/:id', async (c) => {
   const auth = createAuth(c.env)
   const session = await auth.api.getSession({ headers: c.req.raw.headers })
   if (!session) return c.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, 401)
 
   const db = createDb(c.env.QUIZ_DB)
+  const paramId = c.req.param('id')
+  // Accept both full UUID and 8-char shortId
   const [q] = await db
     .select()
     .from(schema.questionnaires)
-    .where(eq(schema.questionnaires.id, c.req.param('id')))
+    .where(
+      paramId.length === 8
+        ? eq(schema.questionnaires.shortId, paramId)
+        : or(eq(schema.questionnaires.id, paramId), eq(schema.questionnaires.shortId, paramId))
+    )
 
   if (!q || q.creatorId !== session.user.id) {
     return c.json({ error: 'Not found', code: 'NOT_FOUND' }, 404)
@@ -148,7 +182,7 @@ app.put('/api/questionnaires/:id', async (c) => {
   await db
     .update(schema.questionnaires)
     .set({
-      ...(body.title !== undefined && { title: body.title }),
+      ...(body.title !== undefined && { title: body.title, slug: toSlug(body.title) }),
       ...(body.status !== undefined && { status: body.status }),
       ...(body.visibility !== undefined && { visibility: body.visibility }),
       ...(body.timeLimitSeconds !== undefined && { timeLimitSeconds: body.timeLimitSeconds }),

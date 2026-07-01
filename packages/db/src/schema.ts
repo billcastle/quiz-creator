@@ -67,6 +67,8 @@ export const questionnaires = sqliteTable('questionnaires', {
     .notNull()
     .default(false),
   category: text('category'),
+  shortId: text('short_id').unique(),
+  slug: text('slug').default(''),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 })
@@ -125,6 +127,7 @@ export const surveys = sqliteTable('surveys', {
     .notNull()
     .default(false),
   category: text('category'),
+  shortId: text('short_id').unique(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 })

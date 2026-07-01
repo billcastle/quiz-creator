@@ -15,6 +15,7 @@ import DesignSystemPage from './pages/DesignSystemPage'
 import HomePage from './pages/HomePage'
 import QuizBuilderPage from './pages/QuizBuilderPage'
 import QuizResultsPage from './pages/QuizResultsPage'
+import QuizShortUrlPage from './pages/QuizShortUrlPage'
 import QuizTakePage from './pages/QuizTakePage'
 import SignInPage from './pages/SignInPage'
 import SignUpPage from './pages/SignUpPage'
@@ -87,7 +88,7 @@ const quizNewRoute = createRoute({
 
 const quizEditRoute = createRoute({
   getParentRoute: () => builderRoute,
-  path: '/quiz/$id/edit',
+  path: '/quiz/$shortId/edit',
   component: QuizBuilderPage,
 })
 
@@ -95,7 +96,7 @@ const quizEditRoute = createRoute({
 
 const quizResultsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: '/quiz/$id/results',
+  path: '/quiz/$shortId/results',
   component: QuizResultsPage,
 })
 
@@ -133,9 +134,17 @@ const signUpRoute = createRoute({
 
 // --- Take routes (public, isolated shell) ---
 
+// /quiz/$shortId — redirect to /quiz/$shortId/$slug canonical URL
+const quizShortUrlRoute = createRoute({
+  getParentRoute: () => takeRoute,
+  path: '/quiz/$shortId',
+  component: QuizShortUrlPage,
+})
+
+// /quiz/$shortId/$slug — taker-facing quiz page
 const quizTakeRoute = createRoute({
   getParentRoute: () => takeRoute,
-  path: '/quiz/$id',
+  path: '/quiz/$shortId/$slug',
   component: QuizTakePage,
 })
 
@@ -158,7 +167,7 @@ const routeTree = rootRoute.addChildren([
   authenticatedRoute.addChildren([quizResultsRoute, surveyResultsRoute]),
   builderRoute.addChildren([quizNewRoute, quizEditRoute, surveyNewRoute, surveyEditRoute]),
   unauthenticatedRoute.addChildren([signInRoute, signUpRoute]),
-  takeRoute.addChildren([quizTakeRoute, surveyTakeRoute]),
+  takeRoute.addChildren([quizShortUrlRoute, quizTakeRoute, surveyTakeRoute]),
   designSystemRoute,
 ])
 
