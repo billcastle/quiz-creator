@@ -132,6 +132,7 @@ Is this a step-by-step procedure for a complex task?
 | Title | Category | Status |
 |---|---|---|
 | PATTERN-file-based-theme | Design System / Theming | Established |
+| PATTERN-local-state-before-save | Data Management | Established |
 | PATTERN-navigation-callback-props | UI / Routing | Established |
 | PATTERN-per-request-env-factory | Cloudflare Workers / API | Established |
 
