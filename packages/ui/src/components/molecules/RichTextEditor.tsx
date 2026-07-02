@@ -79,10 +79,16 @@ export function RichTextEditor({
           <ListOrdered className="h-4 w-4" />
         </ToolbarButton>
       </div>
-      <EditorContent
-        editor={editor}
-        className="min-h-[8rem] px-4 py-3 text-[var(--color-text-primary)]"
-      />
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: clicking below text in editor should focus it */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: clicking below text in editor should focus it */}
+      <div
+        className="min-h-[8rem] cursor-text px-4 py-3 text-[var(--color-text-primary)]"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) editor?.commands.focus()
+        }}
+      >
+        <EditorContent editor={editor} />
+      </div>
     </div>
   )
 }

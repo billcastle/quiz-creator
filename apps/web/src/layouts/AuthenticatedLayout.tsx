@@ -7,6 +7,14 @@ export function AuthenticatedLayout() {
   const navigate = useNavigate()
   const { location } = useRouterState()
   const [sideNavOpen, setSideNavOpen] = useState(false)
+  const [sideCollapsed, setSideCollapsed] = useState(
+    () => localStorage.getItem('sidebar-collapsed') === 'true'
+  )
+
+  function handleCollapse(v: boolean) {
+    setSideCollapsed(v)
+    localStorage.setItem('sidebar-collapsed', String(v))
+  }
 
   async function handleSignOut() {
     await authClient.signOut()
@@ -35,6 +43,8 @@ export function AuthenticatedLayout() {
             onNavigate={handleNavigate}
             onCreateQuiz={() => navigate({ to: '/quiz/new' })}
             onCreateSurvey={() => navigate({ to: '/survey/new' })}
+            collapsed={sideCollapsed}
+            onCollapsedChange={handleCollapse}
           />
         </div>
 
@@ -70,7 +80,7 @@ export function AuthenticatedLayout() {
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-hidden">
           <Outlet />
         </main>
       </div>

@@ -15,6 +15,27 @@
       "when": 1782811203182,
       "tag": "0001_minor_ironclad",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1782813427800,
+      "tag": "0002_ambiguous_iron_monger",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1782821340139,
+      "tag": "0003_nice_talisman",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1782877435237,
+      "tag": "0004_smart_pandemic",
+      "breakpoints": true
     }
   ]
 }

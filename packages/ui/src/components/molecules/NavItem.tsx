@@ -14,7 +14,8 @@ export function NavItem({ icon, label, state = 'default', onClick }: NavItemProp
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+        'flex w-full items-center rounded-md py-2 text-sm font-light hover:font-medium transition-colors',
+        state === 'collapsed' ? 'justify-center px-2' : 'gap-3 px-3',
         state === 'active'
           ? 'bg-[var(--color-accent)] text-[var(--color-accent-fg)]'
           : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-text-primary)]'

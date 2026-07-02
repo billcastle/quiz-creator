@@ -6,6 +6,7 @@ import {
   redirect,
 } from '@tanstack/react-router'
 import { AuthenticatedLayout } from './layouts/AuthenticatedLayout'
+import { BuilderLayout } from './layouts/BuilderLayout'
 import { PublicLayout } from './layouts/PublicLayout'
 import { TakeLayout } from './layouts/TakeLayout'
 import { UnauthenticatedLayout } from './layouts/UnauthenticatedLayout'
@@ -14,6 +15,7 @@ import DesignSystemPage from './pages/DesignSystemPage'
 import HomePage from './pages/HomePage'
 import QuizBuilderPage from './pages/QuizBuilderPage'
 import QuizResultsPage from './pages/QuizResultsPage'
+import QuizShortUrlPage from './pages/QuizShortUrlPage'
 import QuizTakePage from './pages/QuizTakePage'
 import SignInPage from './pages/SignInPage'
 import SignUpPage from './pages/SignUpPage'
@@ -25,11 +27,22 @@ const rootRoute = createRootRoute({
   component: () => <Outlet />,
 })
 
-// Pathless layout route — wraps all authenticated pages
+// Pathless layout route — wraps all authenticated pages (with sidebar/topnav)
 const authenticatedRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: '_authenticated',
   component: AuthenticatedLayout,
+  beforeLoad: async () => {
+    const { data: session } = await authClient.getSession()
+    if (!session) throw redirect({ to: '/sign-in' })
+  },
+})
+
+// Pathless layout route — wraps builder pages (no sidebar, no topnav)
+const builderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: '_builder',
+  component: BuilderLayout,
   beforeLoad: async () => {
     const { data: session } = await authClient.getSession()
     if (!session) throw redirect({ to: '/sign-in' })
@@ -65,34 +78,36 @@ const indexRoute = createRoute({
   component: HomePage,
 })
 
-// --- Authenticated routes ---
+// --- Builder routes (auth required, no chrome) ---
 
 const quizNewRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
+  getParentRoute: () => builderRoute,
   path: '/quiz/new',
   component: QuizBuilderPage,
 })
 
 const quizEditRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
-  path: '/quiz/$id/edit',
+  getParentRoute: () => builderRoute,
+  path: '/quiz/$shortId/edit',
   component: QuizBuilderPage,
 })
 
+// --- Authenticated routes (with sidebar/topnav) ---
+
 const quizResultsRoute = createRoute({
   getParentRoute: () => authenticatedRoute,
-  path: '/quiz/$id/results',
+  path: '/quiz/$shortId/results',
   component: QuizResultsPage,
 })
 
 const surveyNewRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
+  getParentRoute: () => builderRoute,
   path: '/survey/new',
   component: SurveyBuilderPage,
 })
 
 const surveyEditRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
+  getParentRoute: () => builderRoute,
   path: '/survey/$id/edit',
   component: SurveyBuilderPage,
 })
@@ -119,9 +134,17 @@ const signUpRoute = createRoute({
 
 // --- Take routes (public, isolated shell) ---
 
+// /quiz/$shortId — redirect to /quiz/$shortId/$slug canonical URL
+const quizShortUrlRoute = createRoute({
+  getParentRoute: () => takeRoute,
+  path: '/quiz/$shortId',
+  component: QuizShortUrlPage,
+})
+
+// /quiz/$shortId/$slug — taker-facing quiz page
 const quizTakeRoute = createRoute({
   getParentRoute: () => takeRoute,
-  path: '/quiz/$id',
+  path: '/quiz/$shortId/$slug',
   component: QuizTakePage,
 })
 
@@ -141,16 +164,10 @@ const designSystemRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([indexRoute]),
-  authenticatedRoute.addChildren([
-    quizNewRoute,
-    quizEditRoute,
-    quizResultsRoute,
-    surveyNewRoute,
-    surveyEditRoute,
-    surveyResultsRoute,
-  ]),
+  authenticatedRoute.addChildren([quizResultsRoute, surveyResultsRoute]),
+  builderRoute.addChildren([quizNewRoute, quizEditRoute, surveyNewRoute, surveyEditRoute]),
   unauthenticatedRoute.addChildren([signInRoute, signUpRoute]),
-  takeRoute.addChildren([quizTakeRoute, surveyTakeRoute]),
+  takeRoute.addChildren([quizShortUrlRoute, quizTakeRoute, surveyTakeRoute]),
   designSystemRoute,
 ])
 

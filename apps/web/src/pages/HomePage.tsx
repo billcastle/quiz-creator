@@ -1,6 +1,19 @@
-import { Badge, Button, Tabs, TabsList, TabsTrigger } from '@quiz/ui'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Badge,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@quiz/ui'
 import { useNavigate } from '@tanstack/react-router'
-import { FilePlus2 } from 'lucide-react'
+import { FilePlus2, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import type { ContentItem, Questionnaire, Survey } from '../types/content'
@@ -13,17 +26,17 @@ const STATUS_LABELS: Record<string, string> = {
   archived: 'Archived',
 }
 
-function formatDate(ts: number): string {
+function formatDate(ts: string): string {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  }).format(new Date(ts * 1000))
+  }).format(new Date(ts))
 }
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-5">
+    <div className="animate-pulse rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-5">
       <div className="mb-3 flex gap-2">
         <div className="h-5 w-24 rounded-full bg-[var(--color-bg-subtle)]" />
         <div className="h-5 w-16 rounded-full bg-[var(--color-bg-subtle)]" />
@@ -34,35 +47,47 @@ function SkeletonCard() {
   )
 }
 
-function EmptyState({ filter, onNew }: { filter: Filter; onNew: () => void }) {
+function EmptyState({ filter }: { filter: Filter }) {
   const headline =
     filter === 'surveys'
       ? 'No surveys yet'
       : filter === 'questionnaires'
         ? 'No questionnaires yet'
-        : 'No content yet'
-
-  const ctaLabel = filter === 'surveys' ? '+ New Survey' : '+ New Questionnaire'
+        : 'Nothing here yet'
 
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
+    <div className="flex flex-col items-center justify-center py-24 text-center">
       <FilePlus2 size={48} className="mb-4 text-[var(--color-text-disabled)]" strokeWidth={1.25} />
       <h2 className="mb-1 text-lg font-semibold text-[var(--color-text-primary)]">{headline}</h2>
-      <p className="mb-6 text-sm text-[var(--color-text-secondary)]">
-        Create your first one to get started.
+      <p className="text-sm text-[var(--color-text-secondary)]">
+        Use the sidebar to create your first one.
       </p>
-      <Button onClick={onNew}>{ctaLabel}</Button>
     </div>
   )
 }
 
-function ContentCard({ item }: { item: ContentItem }) {
+function ContentCard({
+  item,
+  onDelete,
+}: {
+  item: ContentItem
+  onDelete: (id: string, kind: ContentItem['kind']) => void
+}) {
   const navigate = useNavigate()
   const editRoute =
-    item.kind === 'questionnaire' ? `/quiz/${item.id}/edit` : `/survey/${item.id}/edit`
+    item.kind === 'questionnaire'
+      ? item.shortId
+        ? `/quiz/${item.shortId}/edit`
+        : `/quiz/${item.id}/edit`
+      : `/survey/${item.id}/edit`
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-5 transition-shadow hover:shadow-sm">
+    // biome-ignore lint/a11y/noStaticElementInteractions: card click navigates to edit; keyboard handled by inner buttons
+    // biome-ignore lint/a11y/useKeyWithClickEvents: card click navigates to edit; keyboard handled by inner buttons
+    <div
+      className="group relative flex cursor-pointer flex-col gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-5 transition-shadow hover:shadow-md"
+      onClick={() => navigate({ to: editRoute })}
+    >
       <div className="flex flex-wrap gap-2">
         {item.kind === 'questionnaire' ? (
           <Badge variant="quiz">Questionnaire</Badge>
@@ -71,31 +96,66 @@ function ContentCard({ item }: { item: ContentItem }) {
         )}
         <Badge variant="secondary">{STATUS_LABELS[item.status] ?? item.status}</Badge>
       </div>
-      <p className="truncate text-base font-medium text-[var(--color-text-primary)]">
-        {item.title}
+      <p className="flex-1 truncate text-base font-medium text-[var(--color-text-primary)]">
+        {item.title || 'Untitled'}
       </p>
       <div className="flex items-center justify-between">
         <span className="text-xs text-[var(--color-text-secondary)]">
-          {formatDate(item.createdAt)}
+          Updated {formatDate(item.updatedAt)}
         </span>
-        <button
-          type="button"
-          onClick={() => navigate({ to: editRoute })}
-          className="text-xs font-medium text-[var(--color-accent)] hover:underline"
-        >
-          Edit
-        </button>
+        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate({ to: editRoute })
+            }}
+            className="rounded-md p-1.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-text-primary)]"
+            aria-label={`Edit ${item.title || 'untitled'}`}
+            title="Edit"
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete(item.id, item.kind)
+            }}
+            className="rounded-md p-1.5 text-[var(--color-text-secondary)] hover:bg-red-50 hover:text-red-500"
+            aria-label={`Delete ${item.title || 'untitled'}`}
+            title="Delete"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
       </div>
     </div>
   )
 }
 
 export default function HomePage() {
-  const navigate = useNavigate()
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([])
   const [surveys, setSurveys] = useState<Survey[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<Filter>('all')
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string
+    kind: ContentItem['kind']
+  } | null>(null)
+
+  async function confirmDelete() {
+    if (!pendingDelete) return
+    const { id, kind } = pendingDelete
+    setPendingDelete(null)
+    if (kind === 'questionnaire') {
+      setQuestionnaires((prev) => prev.filter((q) => q.id !== id))
+      await api.del(`/api/questionnaires/${id}`)
+    } else {
+      setSurveys((prev) => prev.filter((s) => s.id !== id))
+      await api.del(`/api/surveys/${id}`)
+    }
+  }
 
   useEffect(() => {
     Promise.all([
@@ -112,7 +172,7 @@ export default function HomePage() {
   const allItems: ContentItem[] = [
     ...questionnaires.map((q) => ({ kind: 'questionnaire' as const, ...q })),
     ...surveys.map((s) => ({ kind: 'survey' as const, ...s })),
-  ].sort((a, b) => b.createdAt - a.createdAt)
+  ].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 
   const visibleItems =
     filter === 'questionnaires'
@@ -121,22 +181,8 @@ export default function HomePage() {
         ? allItems.filter((i) => i.kind === 'survey')
         : allItems
 
-  const defaultNewRoute = filter === 'surveys' ? '/survey/new' : '/quiz/new'
-
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">My Content</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => navigate({ to: '/survey/new' })}>
-            + New Survey
-          </Button>
-          <Button size="sm" onClick={() => navigate({ to: '/quiz/new' })}>
-            + New Questionnaire
-          </Button>
-        </div>
-      </div>
-
       <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
         <TabsList className="mb-6">
           <TabsTrigger value="all">All</TabsTrigger>
@@ -152,14 +198,31 @@ export default function HomePage() {
           <SkeletonCard />
         </div>
       ) : visibleItems.length === 0 ? (
-        <EmptyState filter={filter} onNew={() => navigate({ to: defaultNewRoute })} />
+        <EmptyState filter={filter} />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visibleItems.map((item) => (
-            <ContentCard key={item.id} item={item} />
+            <ContentCard
+              key={item.id}
+              item={item}
+              onDelete={(id, kind) => setPendingDelete({ id, kind })}
+            />
           ))}
         </div>
       )}
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {pendingDelete?.kind}?</AlertDialogTitle>
+            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
